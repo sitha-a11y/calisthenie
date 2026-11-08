@@ -155,9 +155,11 @@ const WeekView = {
     if (ex.weightKg > 0) chips.push(el('span', { class: 'chip' }, `+${formatNumber(ex.weightKg)} kg`));
     if (ex.restSec) chips.push(el('span', { class: 'chip' }, `Repos ${formatDuration(ex.restSec)}`));
 
+    const color = exerciseColor(ex);
     return el('article', {
       class: 'ex-card sortable-item' + (ex.role === 'warmup' ? ' warmup' : ''),
       'data-id': ex.id,
+      style: color ? `--card-color:${color}` : null, // la bande de couleur à gauche
     },
       el('div', {
         class: 'ex-main',

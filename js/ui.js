@@ -80,6 +80,109 @@ function segmentedControl(options, current, onChange) {
   return wrap;
 }
 
+// Pastilles à choix unique, qui passent à la ligne si besoin (ex. les catégories)
+// options = [{ value, label, color }]
+function choiceChips(options, current, onChange) {
+  const wrap = el('div', { class: 'choice-chips', role: 'radiogroup' });
+  options.forEach((opt) => {
+    const btn = el('button', {
+      type: 'button',
+      role: 'radio',
+      class: 'choice-chip' + (opt.value === current ? ' active' : ''),
+      'aria-checked': opt.value === current ? 'true' : 'false',
+      onclick: () => {
+        wrap.querySelectorAll('.choice-chip').forEach((c) => {
+          c.classList.remove('active');
+          c.setAttribute('aria-checked', 'false');
+        });
+        btn.classList.add('active');
+        btn.setAttribute('aria-checked', 'true');
+        onChange(opt.value);
+      },
+    },
+      opt.color ? el('span', { class: 'dot', style: `background:${opt.color}` }) : null,
+      opt.label,
+    );
+    wrap.append(btn);
+  });
+  return wrap;
+}
+
+// ---------- Choix de couleur ----------
+
+// Palette proposée (couleurs vives qui ressortent bien sur fond sombre)
+const PALETTE = [
+  '#ff6b6b', '#ff922b', '#fcc419', '#94d82d', '#51cf66', '#20c997',
+  '#22b8cf', '#4dabf7', '#748ffc', '#9775fa', '#da77f2', '#f06595',
+];
+
+// Rangée de pastilles de couleur + une pastille "couleur perso".
+// - value : couleur choisie ("#rrggbb"), ou null pour "Auto"
+// - autoColor : fonction qui renvoie la couleur "Auto" (ou rien : pas de choix Auto)
+function colorPicker({ value, autoColor = null, onChange }) {
+  let current = value;
+  const wrap = el('div', { class: 'swatches', role: 'radiogroup' });
+  const swatches = []; // { node, color }
+
+  const select = (color) => {
+    current = color;
+    onChange(color);
+    update();
+  };
+
+  if (autoColor) {
+    const auto = el('button', {
+      type: 'button', class: 'swatch swatch-auto', role: 'radio', 'aria-label': 'Couleur de la catégorie',
+      onclick: () => select(null),
+    }, el('span', { class: 'dot' }), 'Auto');
+    swatches.push({ node: auto, color: null });
+    wrap.append(auto);
+  }
+
+  PALETTE.forEach((color) => {
+    const node = el('button', {
+      type: 'button', class: 'swatch', role: 'radio', 'aria-label': color,
+      style: `background:${color}`,
+      onclick: () => select(color),
+    });
+    swatches.push({ node, color });
+    wrap.append(node);
+  });
+
+  // Couleur perso : le sélecteur de couleur du système (iPhone ou Mac)
+  const customInput = el('input', {
+    type: 'color',
+    'aria-label': 'Couleur personnalisée',
+    value: value && !PALETTE.includes(value) ? value : '#ffffff',
+    oninput: (e) => select(e.target.value),
+  });
+  const custom = el('label', { class: 'swatch swatch-custom', title: 'Couleur perso' },
+    el('span', { class: 'swatch-plus', 'aria-hidden': 'true' }, '+'), customInput);
+  wrap.append(custom);
+
+  // Met à jour l'affichage sans tout reconstruire (sinon le sélecteur se fermerait)
+  function update() {
+    swatches.forEach(({ node, color }) => {
+      const on = color === current;
+      node.classList.toggle('selected', on);
+      node.setAttribute('aria-checked', on ? 'true' : 'false');
+    });
+    if (autoColor) {
+      const autoDot = wrap.querySelector('.swatch-auto .dot');
+      const c = autoColor();
+      autoDot.style.background = c || 'transparent';
+      autoDot.classList.toggle('empty', !c);
+    }
+    const isCustom = current !== null && !PALETTE.includes(current);
+    custom.classList.toggle('selected', isCustom);
+    custom.style.background = isCustom ? current : '';
+  }
+
+  update();
+  wrap.refresh = update; // pour mettre à jour "Auto" quand la catégorie change
+  return wrap;
+}
+
 // Champ nombre avec gros boutons − et + (pratique avec des doigts pleins de magnésie)
 // "step" peut être un nombre ou une fonction qui renvoie un nombre.
 function numberStepper({ value, step = 1, min = 0, decimals = false, placeholder = '—', label, onChange }) {

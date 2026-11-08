@@ -31,11 +31,34 @@ const ExerciseForm = {
       onChange: (v) => { draft.restSec = v; },
     });
 
+    // Couleur : "Auto" = couleur de la catégorie choisie
+    const colorField = colorPicker({
+      value: draft.color,
+      autoColor: () => (appData.categories[draft.category] || {}).color,
+      onChange: (c) => { draft.color = c; },
+    });
+
+    const categoryField = choiceChips(
+      [
+        ...CATEGORY_KEYS.map((key) => ({
+          value: key, label: appData.categories[key].name, color: appData.categories[key].color,
+        })),
+        { value: null, label: 'Aucune' },
+      ],
+      draft.category,
+      (v) => { draft.category = v; colorField.refresh(); },
+    );
+
     const content = el('form', {
       class: 'form',
       onsubmit: (e) => { e.preventDefault(); save(); },
     },
       field('Nom', nameInput),
+
+      field('Catégorie', categoryField),
+
+      field('Couleur de la carte', colorField,
+        el('p', { class: 'hint' }, '« Auto » reprend la couleur de la catégorie.')),
 
       field('Rôle', segmentedControl([
         { value: 'warmup', label: 'Échauffement' },

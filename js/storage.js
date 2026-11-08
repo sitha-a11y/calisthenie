@@ -3,6 +3,28 @@
 const STORAGE_KEY = 'calisthenie-data';
 const DATA_VERSION = 1;
 
+// Les catégories, dans l'ordre d'affichage, avec leur couleur par défaut
+const CATEGORY_KEYS = ['push', 'pull', 'legs', 'core', 'neck', 'cardio', 'mobility'];
+
+function createDefaultCategories() {
+  return {
+    push: { name: 'Push', color: '#ff6b6b' },
+    pull: { name: 'Pull', color: '#4dabf7' },
+    legs: { name: 'Jambes', color: '#51cf66' },
+    core: { name: 'Core', color: '#fcc419' },
+    neck: { name: 'Cou', color: '#ff922b' },
+    cardio: { name: 'Cardio', color: '#f06595' },
+    mobility: { name: 'Mobilité/Étirements', color: '#9775fa' },
+  };
+}
+
+// La couleur à afficher pour un exercice : sa couleur perso, sinon celle de sa catégorie
+function exerciseColor(exercise) {
+  if (exercise.color) return exercise.color;
+  const category = appData.categories[exercise.category];
+  return category ? category.color : null;
+}
+
 // Fabrique un identifiant unique, ex. "ex_lq3k9a1f2b"
 function newId(prefix) {
   return `${prefix}_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
@@ -64,6 +86,7 @@ function createDefaultData() {
       weekAReference: toISODate(mondayOf(new Date())), // par défaut : cette semaine = A
       lastExport: null,
     },
+    categories: createDefaultCategories(),
     weeks: { A: createEmptyWeek(), B: createEmptyWeek() },
   };
 }
@@ -73,6 +96,12 @@ function normalizeData(data) {
   const defaults = createDefaultData();
   data.version = data.version || DATA_VERSION;
   data.settings = Object.assign({}, defaults.settings, data.settings);
+  // On garde les couleurs choisies, et on ajoute les catégories manquantes
+  const savedCategories = data.categories || {};
+  data.categories = {};
+  CATEGORY_KEYS.forEach((key) => {
+    data.categories[key] = Object.assign({}, defaults.categories[key], savedCategories[key]);
+  });
   data.weeks = data.weeks || {};
   ['A', 'B'].forEach((w) => {
     data.weeks[w] = data.weeks[w] || {};

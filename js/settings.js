@@ -6,7 +6,58 @@ const SettingsView = {
     root.replaceChildren(
       el('h1', { class: 'page-title' }, 'Réglages'),
       this.renderWeekCard(),
+      this.renderCategoriesCard(),
     );
+  },
+
+  // Couleur de chaque catégorie
+  renderCategoriesCard() {
+    const rows = CATEGORY_KEYS.map((key) => {
+      const cat = appData.categories[key];
+      return el('button', {
+        type: 'button',
+        class: 'list-row',
+        onclick: () => this.editCategoryColor(key),
+      },
+        el('span', { class: 'dot dot-lg', style: `background:${cat.color}` }),
+        el('span', { class: 'list-row-label' }, cat.name),
+        el('span', { class: 'chevron', 'aria-hidden': 'true' }, '›'),
+      );
+    });
+
+    return el('div', { class: 'card' },
+      el('h2', { class: 'card-title' }, 'Couleurs des catégories'),
+      el('p', { class: 'muted' }, 'Touche une catégorie pour changer sa couleur.'),
+      el('div', { class: 'list' }, rows),
+      el('button', {
+        type: 'button',
+        class: 'link-btn reset-btn',
+        onclick: async () => {
+          const ok = await confirmSheet('Couleurs par défaut ?',
+            'Les 7 catégories reprendront leur couleur d’origine. Les couleurs perso des exercices ne changent pas.',
+            'Réinitialiser');
+          if (!ok) return;
+          appData.categories = createDefaultCategories();
+          saveData(appData);
+          this.render();
+        },
+      }, 'Remettre les couleurs par défaut'),
+    );
+  },
+
+  editCategoryColor(key) {
+    const cat = appData.categories[key];
+    openSheet(`Couleur : ${cat.name}`, el('div', {},
+      colorPicker({
+        value: cat.color,
+        onChange: (color) => {
+          cat.color = color;
+          saveData(appData);
+          this.render(); // la liste derrière se met à jour en direct
+        },
+      }),
+      el('p', { class: 'hint' }, 'Le « + » ouvre le sélecteur pour choisir n’importe quelle couleur.'),
+    ));
   },
 
   // Définir quelle semaine est une semaine A
