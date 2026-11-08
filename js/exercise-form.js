@@ -172,6 +172,15 @@ const ExerciseForm = {
         oninput: (e) => { draft.note = e.target.value; },
       })),
 
+      field('Règle de progression', el('textarea', {
+        class: 'input textarea',
+        rows: 2,
+        value: progressRuleOf(draft),
+        placeholder: 'Ex. quand 3 × 8 propres → ajouter 1 rep',
+        'aria-label': 'Règle de progression',
+        oninput: (e) => { draft.progressRule = e.target.value; },
+      }), el('p', { class: 'hint' }, 'Préremplie selon le type d’exercice. Affichée dans la fiche.')),
+
       field('Comment faire', el('textarea', {
         class: 'input textarea',
         rows: 3,
@@ -202,6 +211,12 @@ const ExerciseForm = {
       }
       draft.note = draft.note.trim();
       draft.howTo = (draft.howTo || '').trim();
+      // Règle identique à la règle automatique → on reste en "automatique"
+      if (draft.progressRule !== null && draft.progressRule !== undefined) {
+        draft.progressRule = draft.progressRule.trim();
+        const auto = defaultProgressRule(Object.assign({}, draft, { progressRule: null }));
+        if (draft.progressRule === auto) draft.progressRule = null;
+      }
       close();
       onSave(draft);
     }

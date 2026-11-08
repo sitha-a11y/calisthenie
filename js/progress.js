@@ -64,6 +64,115 @@ function removePerf(name, entryId) {
   return record.entries.splice(index, 1)[0];
 }
 
+// ---------- Règles de progression ----------
+
+const PROGRESS_RULES = {
+  skillHold: 'Quand toutes les séries atteignent 10 s propres → monter d’un cran et repartir à 5 s.',
+  strength: 'Quand toutes les séries sont au max de reps prévu, 2 séances de suite → ajouter 1 rep par série, ou monter d’un cran.',
+  vest: 'Quand c’est facile 2 séances de suite → ajouter du poids (ou plus de reps si le gilet est déjà au max).',
+  oneArmPullUp: 'Quand 3 × 2 /bras → passer à 3 × 3.',
+  handstand: 'Noter le meilleur temps sans mur à chaque séance du lundi.',
+  maxMinusOne: 'Noter le nombre de reps à chaque fois.',
+};
+
+// Familles du chart dont les holds sont des "skills" (planche, levers, V-sit…)
+const SKILL_HOLD_FAMILIES = ['front-lever', 'back-lever', 'planche', 'ring-planche', 'l-sit', 'elbow-lever', 'human-flag', 'one-arm-handstand'];
+// Familles du chart dont les exercices en reps sont de la force
+const STRENGTH_FAMILIES = ['pistol', 'shrimp', 'hamstrings', 'squat', 'split-squat', 'one-arm-push-up', 'push-up', 'ring-push-up',
+  'planche-push-up', 'ring-planche-push-up', 'hspu', 'dips', 'ring-dips', 'one-arm-pull-up', 'pull-up', 'muscle-up', 'rows', 'front-lever-rows'];
+const STRENGTH_NAMES = ['archer pull-ups'];
+
+// Famille du chart d'un exercice relié (la plus précise : "front-lever-rows" plutôt que "front-lever")
+function chartFamilyOf(libraryId) {
+  if (!libraryId) return null;
+  let best = null;
+  LIBRARY_DATA.forEach((s) => s.families.forEach((f) => {
+    if (libraryId.startsWith(`${f.id}-`) && (!best || f.id.length > best.id.length)) best = f;
+  }));
+  return best;
+}
+
+// La règle automatique d'un exercice (texte vide s'il n'y en a pas)
+function defaultProgressRule(ex) {
+  if (ex.role === 'warmup' || ex.category === 'mobility') return '';
+  const name = perfKey(ex.name);
+  if (name === 'one arm pull up') return PROGRESS_RULES.oneArmPullUp;
+  if (name.includes('kick-ups') || name.includes('handstand libre')) return PROGRESS_RULES.handstand;
+  if (ex.toMax && (ex.note || '').includes('1 rep avant')) return PROGRESS_RULES.maxMinusOne;
+  if (ex.vest) return PROGRESS_RULES.vest;
+  const family = chartFamilyOf(ex.libraryId);
+  if (ex.type === 'hold' && family && SKILL_HOLD_FAMILIES.includes(family.id)) return PROGRESS_RULES.skillHold;
+  if (ex.type === 'reps' && !ex.toMax && !name.includes('explosif')
+    && ((family && STRENGTH_FAMILIES.includes(family.id)) || STRENGTH_NAMES.includes(name))) return PROGRESS_RULES.strength;
+  return '';
+}
+
+// La règle à afficher : celle écrite à la main, sinon la règle automatique
+function progressRuleOf(ex) {
+  return ex.progressRule === null || ex.progressRule === undefined ? defaultProgressRule(ex) : ex.progressRule;
+}
+
+// ---------- Monter d'un cran ----------
+
+// L'exercice suivant dans la même famille du chart (ou null)
+function nextLibraryItem(ex) {
+  if (!ex.libraryId) return null;
+  for (const section of buildLibrary()) {
+    for (const family of section.families) {
+      const index = family.items.findIndex((i) => i.id === ex.libraryId);
+      if (index !== -1) return family.items[index + 1] || null;
+    }
+  }
+  return null;
+}
+
+// Petit panneau pour choisir la nouvelle cible. Renvoie une promesse avec le nombre choisi.
+function askNewTarget(item, suggested) {
+  return new Promise((resolve) => {
+    let value = suggested;
+    let done = false;
+    const finish = () => { if (!done) { done = true; resolve(value); } };
+    const label = { reps: 'Reps par set', hold: 'Secondes par set', distance: 'Mètres par set' }[item.type];
+    const form = el('form', {
+      class: 'form',
+      onsubmit: (e) => { e.preventDefault(); close(); finish(); },
+    },
+      el('p', { class: 'muted' }, `Les sets et le repos sont gardés. Ajuste la cible pour « ${item.name} ».`),
+      field(label, numberStepper({ value, step: item.type === 'hold' ? 1 : 1, label, onChange: (v) => { value = v; } })),
+      el('div', { class: 'form-actions' }, el('button', { type: 'submit', class: 'btn btn-primary' }, 'Valider')),
+    );
+    const close = openSheet('Nouvelle cible', form);
+    // Fermé autrement (✕, clic à côté) : on garde la valeur affichée
+    const observer = new MutationObserver(() => {
+      if (!document.body.contains(form)) { observer.disconnect(); finish(); }
+    });
+    observer.observe(document.body, { childList: true });
+  });
+}
+
+async function levelUp(ex, onChange) {
+  const next = nextLibraryItem(ex);
+  if (!next) return;
+  const ok = await confirmSheet('Monter d’un cran ?',
+    `« ${ex.name} » sera remplacé par « ${next.name} » dans cette séance. Les sets, le repos et les notes sont gardés.`,
+    'Monter d’un cran');
+  if (!ok) return;
+
+  // Holds de skill : on repart à 5 s (règle de progression) ; sinon on garde la cible
+  const family = chartFamilyOf(next.id);
+  const isSkillHold = next.type === 'hold' && family && SKILL_HOLD_FAMILIES.includes(family.id);
+  const suggested = isSkillHold ? 5 : (next.type === ex.type ? ex.target : null);
+  const target = await askNewTarget(next, suggested);
+
+  const backup = JSON.parse(JSON.stringify(ex));
+  Object.assign(ex, { name: next.name, libraryId: next.id, type: next.type, target });
+  onChange();
+  showToast(`Monté d’un cran : ${next.name}`, {
+    actionLabel: 'Annuler',
+    onAction: () => { Object.assign(ex, backup); onChange(); },
+  });
+}
+
 // ---------- Épinglés ----------
 
 function isPinned(name) {
@@ -260,6 +369,9 @@ const ProgressSheet = {
       const entries = perfEntries(name);
       const stats = perfStats(name);
       const unit = stats ? stats.last.unit : (exercise ? perfUnit(exercise) : 'reps');
+      const rule = exercise ? progressRuleOf(exercise) : '';
+      // "Monter d'un cran" seulement depuis une carte (on sait quelle séance modifier)
+      const next = exercise && owner ? nextLibraryItem(exercise) : null;
 
       body.replaceChildren(
         el('div', { class: 'pin-row' }, toggleSwitch(isPinned(name), (v) => { setPinned(name, v); onChange(); }, '★ Épinglé dans Progrès')),
@@ -272,10 +384,20 @@ const ProgressSheet = {
 
         perfChart(entries, unit, color),
 
-        el('button', {
-          type: 'button', class: 'btn btn-primary',
-          onclick: () => { close(); LogSheet.open({ name, exercise, onDone: onChange }); },
-        }, '+ Noter une performance'),
+        rule ? el('div', { class: 'rule-block' },
+          el('span', { class: 'rule-title' }, 'Règle de progression'),
+          el('p', {}, rule)) : null,
+
+        el('div', { class: 'form-actions sheet-actions' },
+          el('button', {
+            type: 'button', class: 'btn btn-primary',
+            onclick: () => { close(); LogSheet.open({ name, exercise, onDone: onChange }); },
+          }, '+ Noter une performance'),
+          next ? el('button', {
+            type: 'button', class: 'btn btn-secondary',
+            onclick: () => { close(); levelUp(exercise, onChange); },
+          }, `Monter d’un cran → ${next.name}`) : null,
+        ),
 
         entries.length ? el('h3', { class: 'section-label' }, 'Historique') : null,
         entries.length ? el('ul', { class: 'perf-history' }, [...entries].reverse().map((entry) => el('li', {},

@@ -942,6 +942,15 @@ html.no-scroll, html.no-scroll body { overflow: hidden; }
 .perf-delete { grid-column: 3; grid-row: 1; font-size: 15px; }
 
 .pin-row { margin: -4px 0 8px; }
+.rule-block {
+  margin-bottom: 14px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+}
+.rule-title { font-size: 12px; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; color: var(--text-faint); }
+.rule-block p { margin: 4px 0 0; font-size: 15px; line-height: 1.45; }
+.sheet-actions { margin-top: 0; margin-bottom: 16px; }
 .progress-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 8px; }
 .progress-row {
   display: flex;

@@ -52,6 +52,7 @@ function createExercise(fields = {}) {
     role: 'main',      // "warmup" (échauffement) ou "main" (principal)
     note: '',
     howTo: '',         // explication "Comment faire" (bloc dépliable)
+    progressRule: null, // règle de progression (null = règle automatique selon le type d'exercice)
     color: null,       // couleur perso (null = couleur de la catégorie)
   }, fields);
 }
