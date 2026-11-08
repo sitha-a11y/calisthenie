@@ -15,6 +15,16 @@ const WeekView = {
     this.day = dayKeyFor(today);
   },
 
+  // La vraie date du jour affiché : dans la semaine en cours si c'est sa lettre,
+  // sinon dans la semaine suivante (qui a l'autre lettre)
+  viewedDate() {
+    const today = new Date();
+    const currentLetter = weekLetterFor(today, appData.settings.weekAReference);
+    const date = mondayOf(today);
+    date.setDate(date.getDate() + (this.week === currentLetter ? 0 : 7) + DAY_KEYS.indexOf(this.day));
+    return date;
+  },
+
   render() {
     const root = document.getElementById('view-session');
     root.replaceChildren(this.renderHeader(), this.renderDay());
@@ -71,9 +81,11 @@ const WeekView = {
 
   renderDay() {
     const dayData = this.currentDay();
+    const date = this.viewedDate();
 
     const labelRow = el('div', { class: 'day-label-row' },
-      el('p', { class: 'day-label' }, `${DAY_LONG[this.day]} · semaine ${this.week}`),
+      el('p', { class: 'day-label' },
+        `${formatDayMonth(date)} · semaine ${this.week}`),
       el('button', {
         class: 'icon-btn',
         'aria-label': 'Options du jour',
@@ -103,160 +115,48 @@ const WeekView = {
         oninput: (e) => { dayData.title = e.target.value; saveData(appData); },
         onkeydown: (e) => { if (e.key === 'Enter') e.target.blur(); },
       });
-      body = el('div', {}, titleInput, this.renderExercises(dayData));
+      body = el('div', {}, titleInput, ExerciseList.render(dayData, () => this.saveAndRender()));
     }
 
     // La clé "data-key" change à chaque jour → relance la petite animation d'apparition
     return el('div', { class: 'day-content', 'data-key': this.week + this.day },
-      labelRow, body, el('div', { class: 'card' }, restToggle));
+      labelRow,
+      this.renderDailyBlocks(date),
+      body,
+      el('div', { class: 'card' }, restToggle));
   },
 
-  renderExercises(dayData) {
-    const warmups = dayData.exercises.filter((e) => e.role === 'warmup');
-    const mains = dayData.exercises.filter((e) => e.role !== 'warmup');
-
-    const addButton = el('button', {
-      class: 'add-btn',
-      onclick: () => this.addExercise(),
-    }, '+ Ajouter un exercice');
-
-    if (dayData.exercises.length === 0) {
-      return el('div', {},
-        el('div', { class: 'empty-state' },
-          el('p', {}, 'Aucun exercice pour l’instant.'),
-          el('p', { class: 'hint' }, 'Ajoute ton premier exercice ci-dessous.'),
-        ),
-        addButton,
-      );
-    }
-
-    // Une liste par rôle ; on peut réordonner à l'intérieur de chaque liste
-    const makeList = (list, role) => {
-      const listEl = el('div', { class: 'ex-list' }, list.map((ex) => this.renderExerciseCard(ex)));
-      makeSortable(listEl, (from, to) => {
-        moveItem(list, from, to);
-        dayData.exercises = role === 'warmup' ? [...list, ...mains] : [...warmups, ...list];
-        this.saveAndRender();
+  // Le groupe du jour de chaque routine quotidienne (ex. Étirements matin · Groupe 2)
+  renderDailyBlocks(date) {
+    const blocks = appData.dailyRoutines
+      .filter((routine) => routine.groups.length > 0)
+      .map((routine) => {
+        const index = dailyGroupIndexFor(routine, date);
+        const group = routine.groups[index];
+        return el('section', { class: 'daily-block', style: `--group-color:${group.color}` },
+          el('button', {
+            type: 'button',
+            class: 'daily-head',
+            'aria-label': `Modifier ${routine.name}`,
+            onclick: () => { DailyView.selectGroup(routine.id, index); App.show('daily'); },
+          },
+            el('span', { class: 'daily-name' }, routine.name),
+            el('span', { class: 'daily-group' }, group.name),
+            el('span', { class: 'chevron', 'aria-hidden': 'true' }, '›'),
+          ),
+          group.exercises.length
+            ? el('ul', { class: 'daily-list' }, group.exercises.map((ex) => {
+              const color = exerciseColor(ex);
+              return el('li', {},
+                el('span', { class: 'dot' + (color ? '' : ' empty'), style: color ? `background:${color}` : null }),
+                el('span', { class: 'daily-ex-name' }, ex.name),
+                el('span', { class: 'daily-ex-sets' }, ExerciseList.compactSets(ex)),
+              );
+            }))
+            : el('p', { class: 'hint daily-empty' }, 'Aucun exercice dans ce groupe.'),
+        );
       });
-      return listEl;
-    };
-
-    return el('div', {},
-      warmups.length ? el('h3', { class: 'section-label' }, 'Échauffement') : null,
-      warmups.length ? makeList(warmups, 'warmup') : null,
-      warmups.length && mains.length ? el('h3', { class: 'section-label' }, 'Principal') : null,
-      mains.length ? makeList(mains, 'main') : null,
-      addButton,
-    );
-  },
-
-  renderExerciseCard(ex) {
-    const chips = [];
-    if (ex.weightKg > 0) chips.push(el('span', { class: 'chip' }, `+${formatNumber(ex.weightKg)} kg`));
-    if (ex.restSec) chips.push(el('span', { class: 'chip' }, `Repos ${formatDuration(ex.restSec)}`));
-
-    const color = exerciseColor(ex);
-    return el('article', {
-      class: 'ex-card sortable-item' + (ex.role === 'warmup' ? ' warmup' : ''),
-      'data-id': ex.id,
-      style: color ? `--card-color:${color}` : null, // la bande de couleur à gauche
-    },
-      el('div', {
-        class: 'ex-main',
-        role: 'button',
-        tabindex: '0',
-        onclick: () => this.editExercise(ex),
-        onkeydown: (e) => { if (e.key === 'Enter') this.editExercise(ex); },
-      },
-        el('div', { class: 'ex-name' }, ex.name),
-        this.renderSets(ex),
-        chips.length ? el('div', { class: 'chips' }, chips) : null,
-        ex.note ? el('div', { class: 'ex-note' }, ex.note) : null,
-      ),
-      el('div', { class: 'ex-side' },
-        el('button', {
-          class: 'icon-btn',
-          'aria-label': `Options pour ${ex.name}`,
-          onclick: () => this.openExerciseMenu(ex),
-        }, '⋯'),
-        el('div', { class: 'drag-handle', 'aria-label': 'Glisser pour déplacer', title: 'Glisser pour déplacer' }, '⠿'),
-      ),
-    );
-  },
-
-  // "3 × 12 reps", "4 × 20 s", "Sets à définir"…
-  renderSets(ex) {
-    const isHold = ex.type === 'hold';
-    const unit = (text) => el('span', { class: 'unit' }, text);
-    const targetText = ex.target === null ? null : (isHold ? formatDuration(ex.target) : String(ex.target));
-
-    if (ex.sets !== null && targetText !== null) {
-      return el('div', { class: 'ex-sets' }, `${ex.sets} × ${targetText}`, isHold ? null : unit('reps'));
-    }
-    if (targetText !== null) {
-      return el('div', { class: 'ex-sets' }, targetText, isHold ? null : unit('reps'));
-    }
-    if (ex.sets !== null) {
-      return el('div', { class: 'ex-sets' }, String(ex.sets), unit(ex.sets > 1 ? 'sets' : 'set'));
-    }
-    return el('div', { class: 'ex-sets empty' }, isHold ? 'Durée à définir' : 'Sets à définir');
-  },
-
-  // ---------- Actions sur les exercices ----------
-
-  addExercise() {
-    ExerciseForm.open({
-      onSave: (draft) => {
-        const day = this.currentDay();
-        day.exercises.push(draft);
-        sortByRole(day);
-        this.saveAndRender();
-      },
-    });
-  },
-
-  editExercise(ex) {
-    ExerciseForm.open({
-      exercise: ex,
-      onSave: (draft) => {
-        Object.assign(ex, draft);
-        sortByRole(this.currentDay());
-        this.saveAndRender();
-      },
-      onDelete: () => this.deleteExercise(ex),
-    });
-  },
-
-  duplicateExercise(ex) {
-    const day = this.currentDay();
-    const index = day.exercises.indexOf(ex);
-    day.exercises.splice(index + 1, 0, cloneExercise(ex));
-    this.saveAndRender();
-    showToast(`« ${ex.name} » dupliqué`);
-  },
-
-  deleteExercise(ex) {
-    const day = this.currentDay();
-    const index = day.exercises.indexOf(ex);
-    if (index === -1) return;
-    day.exercises.splice(index, 1);
-    this.saveAndRender();
-    // Pas de confirmation, mais un bouton "Annuler" pendant quelques secondes
-    showToast(`« ${ex.name} » supprimé`, {
-      actionLabel: 'Annuler',
-      onAction: () => {
-        day.exercises.splice(index, 0, ex);
-        this.saveAndRender();
-      },
-    });
-  },
-
-  openExerciseMenu(ex) {
-    actionSheet(ex.name, [
-      { label: 'Modifier', onClick: () => this.editExercise(ex) },
-      { label: 'Dupliquer', onClick: () => this.duplicateExercise(ex) },
-      { label: 'Supprimer', danger: true, onClick: () => this.deleteExercise(ex) },
-    ]);
+    return blocks.length ? el('div', { class: 'daily-blocks' }, blocks) : null;
   },
 
   // ---------- Actions sur le jour et la semaine ----------

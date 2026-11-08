@@ -49,6 +49,11 @@ function dayKeyFor(date) {
   return DAY_KEYS[(date.getDay() + 6) % 7];
 }
 
+// "mardi 10 nov."
+function formatDayMonth(date) {
+  return date.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'short' });
+}
+
 // "lundi 9 novembre"
 function formatLongDate(date) {
   return date.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });

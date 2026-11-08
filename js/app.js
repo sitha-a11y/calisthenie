@@ -17,6 +17,7 @@ const App = {
       btn.classList.toggle('active', btn.dataset.view === view);
     });
     if (view === 'session') WeekView.render();
+    if (view === 'daily') DailyView.render();
     if (view === 'settings') SettingsView.render();
     window.scrollTo(0, 0);
   },

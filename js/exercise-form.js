@@ -4,10 +4,11 @@ const ExerciseForm = {
   // exercise : l'exercice à modifier (ou rien pour en créer un nouveau)
   // onSave(brouillon) : appelé avec l'exercice rempli
   // onDelete() : appelé si on appuie sur "Supprimer"
-  open({ exercise = null, onSave, onDelete }) {
+  // defaults : valeurs de départ d'un nouvel exercice (ex. { category: 'mobility' })
+  open({ exercise = null, defaults = {}, onSave, onDelete }) {
     const isNew = !exercise;
     // On travaille sur un "brouillon" : rien n'est modifié tant qu'on n'a pas enregistré
-    const draft = isNew ? createExercise() : JSON.parse(JSON.stringify(exercise));
+    const draft = isNew ? createExercise(defaults) : JSON.parse(JSON.stringify(exercise));
 
     const nameInput = el('input', {
       class: 'input input-lg',
