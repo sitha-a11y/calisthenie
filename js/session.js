@@ -53,6 +53,23 @@ function formatClock(ms) {
   return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, '0')}`;
 }
 
+// Exercices "/côté", "/jambe", "/bras" : chaque set se fait des deux côtés (gauche puis droit)
+const SIDE_LABELS = {
+  côté: ['Côté gauche', 'Côté droit'],
+  jambe: ['Jambe gauche', 'Jambe droite'],
+  bras: ['Bras gauche', 'Bras droit'],
+};
+const SWITCH_LABEL = { côté: 'Change de côté', jambe: 'Change de jambe', bras: 'Change de bras' };
+
+function sideLabel(item, side) {
+  return (SIDE_LABELS[item.perSide] || SIDE_LABELS.côté)[side];
+}
+
+// "✓ Côté gauche fait", "✓ Jambe gauche faite"
+function sideDoneLabel(item) {
+  return `✓ ${sideLabel(item, 0)} ${item.perSide === 'jambe' ? 'faite' : 'fait'}`;
+}
+
 // Texte de la cible d'un set : "5 reps /jambe", "6 s", "max (−1)", "20 m"
 function sessionTargetText(item) {
   let text;
@@ -126,6 +143,8 @@ const SessionPlayer = {
       startedAt: SessionClock.now(),
       index: 0,      // exercice en cours
       setIndex: 0,   // set en cours
+      side: 0,       // pour les exercices /côté : 0 = gauche, 1 = droit
+      sideValues: [], // valeur faite du côté gauche (en attendant le droit)
       phase: 'set',  // "set", "rest" ou "recap"
       finishedAt: null,
       restEndsAt: null, // fin du repos en cours (heure absolue : continue même si l'app est en arrière-plan)
@@ -224,23 +243,18 @@ const SessionPlayer = {
     Beeper.unlock();
     const item = this.current();
     const mode = item.toMax || item.target === null ? 'up' : 'down';
-    this.countdown = {
-      stage: 'prep',
-      mode,
-      side: item.perSide && mode === 'down' ? 'gauche' : null,
-      endsAt: SessionClock.now() + 3000,
-    };
+    this.countdown = { stage: 'prep', mode, endsAt: SessionClock.now() + 3000 };
     this.render();
   },
 
   // Le compte à rebours est arrivé à zéro
   holdFinished() {
     const item = this.current();
-    const c = this.countdown;
-    if (c.side === 'gauche') {
-      // Côté gauche fini : 3 s pour changer de côté, puis côté droit
-      this.countdown = { stage: 'prep', mode: 'down', side: 'droit', switching: true, endsAt: SessionClock.now() + 3000 };
+    if (item.perSide && this.session.side === 0) {
+      // Premier côté fini : on le valide, puis 3 s pour changer de côté, et le chrono repart pour l'autre côté
       Beeper.beep(2);
+      this.validateSet(item.target);
+      this.countdown = { stage: 'prep', mode: 'down', switching: true, endsAt: SessionClock.now() + 3000 };
       this.render();
       return;
     }
@@ -259,10 +273,16 @@ const SessionPlayer = {
 
   renderCountdown() {
     const c = this.countdown;
+    const item = this.current();
+    const side = item.perSide ? sideLabel(item, this.session.side) : null;
     const now = SessionClock.now();
     let label;
-    if (c.stage === 'prep') label = c.switching ? 'Change de côté' : (c.side ? `Prépare-toi · côté ${c.side}` : 'Prépare-toi');
-    else label = c.side ? `Côté ${c.side}` : (c.mode === 'up' ? 'Chrono' : 'Tiens !');
+    if (c.stage === 'prep') {
+      if (c.switching) label = SWITCH_LABEL[item.perSide] || 'Change de côté';
+      else label = side ? `Prépare-toi · ${side.toLowerCase()}` : 'Prépare-toi';
+    } else {
+      label = side || (c.mode === 'up' ? 'Chrono' : 'Tiens !');
+    }
     let text;
     if (c.stage === 'prep') text = String(Math.ceil((c.endsAt - now) / 1000));
     else text = c.mode === 'up' ? formatClock(now - c.runStart) : formatClock(c.endsAt - now);
@@ -373,6 +393,9 @@ const SessionPlayer = {
         categoryLabel ? el('span', { class: 'session-cat' }, categoryLabel) : null,
         el('h1', { class: 'session-name' }, item.name),
         el('div', { class: 'session-setline' }, `Set ${s.setIndex + 1} / ${item.sets}`),
+        item.perSide ? el('div', { class: 'session-side' },
+          sideLabel(item, s.side),
+          el('span', { class: 'session-side-step' }, `${s.side + 1} / 2`)) : null,
         el('div', { class: 'session-target' },
           sessionTargetText(item),
           item.vest ? el('span', { class: 'chip session-chip' }, `Gilet (${formatNumber(appData.settings.vestKg)} kg)`) : null,
@@ -384,7 +407,7 @@ const SessionPlayer = {
         item.note ? el('details', { class: 'howto session-details' }, el('summary', {}, 'Note'), el('p', {}, item.note)) : null,
       ),
       el('footer', { class: 'session-nav' },
-        el('button', { type: 'button', class: 'session-nav-btn', disabled: s.index === 0 && s.setIndex === 0, onclick: () => this.previous() }, '← Précédent'),
+        el('button', { type: 'button', class: 'session-nav-btn', disabled: s.index === 0 && s.setIndex === 0 && s.side === 0, onclick: () => this.previous() }, '← Précédent'),
         el('button', { type: 'button', class: 'session-nav-btn', onclick: () => this.skip() }, 'Passer l’exercice'),
         el('button', { type: 'button', class: 'session-nav-btn danger', onclick: () => this.askFinish() }, 'Terminer'),
       ),
@@ -394,17 +417,19 @@ const SessionPlayer = {
   // Zone des gros boutons (remplacée par le chrono pendant un hold)
   renderActionArea(item, adjust) {
     if (this.countdown) return this.renderCountdown();
+    const firstSide = item.perSide && this.session.side === 0;
     const doneBtn = el('button', {
       type: 'button', class: 'session-done-btn',
       onclick: () => { Beeper.unlock(); this.validateSet(this.draftValue); },
-    }, '✓ Set fait');
+    }, firstSide ? sideDoneLabel(item) : '✓ Set fait');
     if (item.type !== 'hold') return el('div', { class: 'session-actions' }, adjust, doneBtn);
 
     // Hold : "Démarrer" lance le chrono ; on peut aussi valider à la main
     const countsDown = !item.toMax && item.target !== null;
-    const startLabel = countsDown
-      ? `▶ Démarrer · ${formatDuration(item.target)}${item.perSide ? ' × 2 côtés' : ''}`
-      : '▶ Démarrer le chrono';
+    let startLabel = '▶ Démarrer le chrono';
+    if (countsDown && !item.perSide) startLabel = `▶ Démarrer · ${formatDuration(item.target)}`;
+    else if (countsDown && firstSide) startLabel = `▶ Démarrer · ${formatDuration(item.target)} × 2 côtés`;
+    else if (countsDown) startLabel = `▶ Démarrer · ${sideLabel(item, 1).toLowerCase()}`;
     return el('div', { class: 'session-actions' },
       el('button', { type: 'button', class: 'session-start-btn', onclick: () => this.startHold() }, startLabel),
       adjust,
@@ -426,8 +451,30 @@ const SessionPlayer = {
   validateSet(value) {
     const s = this.session;
     const item = this.current();
-    const adjusted = item.toMax ? value !== null : value !== item.target;
-    item.results[s.setIndex] = { value, adjusted };
+    const isAdjusted = (v) => (item.toMax ? v !== null && v !== undefined : v !== item.target);
+
+    // Exercice /côté : le 1er côté est noté, puis on passe à l'autre côté (le set n'est pas encore fini)
+    if (item.perSide && s.side === 0) {
+      s.sideValues = [value];
+      s.side = 1;
+      this.draftValue = null;
+      this.persist();
+      this.render();
+      return;
+    }
+
+    let finalValue = value;
+    let adjusted = isAdjusted(value);
+    if (item.perSide) {
+      // Le set compte le côté le plus faible des deux
+      const left = s.sideValues[0];
+      const known = [left, value].filter((v) => v !== null && v !== undefined);
+      finalValue = known.length ? Math.min(...known) : null;
+      adjusted = adjusted || isAdjusted(left);
+    }
+    item.results[s.setIndex] = { value: finalValue, adjusted };
+    s.side = 0;
+    s.sideValues = [];
     this.draftValue = null;
 
     const lastSet = s.setIndex >= item.sets - 1;
@@ -451,7 +498,7 @@ const SessionPlayer = {
   },
 
   goTo({ index, setIndex }) {
-    Object.assign(this.session, { index, setIndex, phase: 'set', restEndsAt: null, next: null });
+    Object.assign(this.session, { index, setIndex, phase: 'set', restEndsAt: null, next: null, side: 0, sideValues: [] });
     this.draftValue = null;
     this.countdown = null;
     this.persist();
@@ -460,6 +507,15 @@ const SessionPlayer = {
 
   previous() {
     const s = this.session;
+    if (s.side === 1) {
+      // Côté droit → on revient au côté gauche du même set
+      Object.assign(s, { side: 0, sideValues: [] });
+      this.countdown = null;
+      this.draftValue = null;
+      this.persist();
+      this.render();
+      return;
+    }
     if (s.setIndex > 0) { this.goTo({ index: s.index, setIndex: s.setIndex - 1 }); return; }
     if (s.index === 0) return;
     const prev = s.items[s.index - 1];
@@ -587,7 +643,7 @@ const SessionPlayer = {
     const where = saved.phase === 'recap' ? 'récapitulatif' : `exercice ${saved.index + 1} / ${saved.items.length}`;
     const ok = await confirmSheet('Reprendre la séance ?', `${saved.title} — ${where}.`, 'Reprendre');
     if (ok) {
-      this.session = saved;
+      this.session = Object.assign({ side: 0, sideValues: [] }, saved);
       this.draftValue = null;
       this.countdown = null;
       Beeper.unlock();
