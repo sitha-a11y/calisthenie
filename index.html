@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <!-- viewport-fit=cover : l'app utilise tout l'écran de l'iPhone (encoche comprise) -->
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0e0f13">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Calisthénie</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <main id="app">
+    <!-- Chaque "view" est un écran. Un seul est visible à la fois. -->
+    <section id="view-session" class="view"></section>
+    <section id="view-settings" class="view" hidden></section>
+  </main>
+
+  <!-- Barre de navigation en bas de l'écran -->
+  <nav class="tabbar" id="tabbar">
+    <button class="tabbar-btn active" data-view="session">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 6.5v11M17.5 6.5v11M3 9.5v5M21 9.5v5M6.5 12h11" /></svg>
+      <span>Séance</span>
+    </button>
+    <button class="tabbar-btn" data-view="settings">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3" /><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1" /></svg>
+      <span>Réglages</span>
+    </button>
+  </nav>
+
+  <!-- Les scripts sont chargés dans cet ordre ; "defer" = attendre que la page soit prête -->
+  <script src="js/dates.js" defer></script>
+  <script src="js/storage.js" defer></script>
+  <script src="js/ui.js" defer></script>
+  <script src="js/week-view.js" defer></script>
+  <script src="js/settings.js" defer></script>
+  <script src="js/app.js" defer></script>
+</body>
+</html>
