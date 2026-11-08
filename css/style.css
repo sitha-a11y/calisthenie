@@ -223,6 +223,308 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--today); out
 .switch input:checked + .switch-track { background: #34c759; border-color: #34c759; }
 .switch input:checked + .switch-track::after { transform: translateX(20px); }
 
+/* ---------- Ligne "MARDI · SEMAINE A  ⋯" ---------- */
+.day-label-row { display: flex; justify-content: space-between; align-items: center; }
+.day-label-row .day-label { margin: 0; }
+
+.icon-btn {
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-sm);
+  font-size: 22px;
+  line-height: 1;
+  color: var(--text-dim);
+  transition: background 0.15s;
+}
+.icon-btn:active { background: var(--surface-2); }
+
+/* ---------- Cartes d'exercice ---------- */
+.section-label {
+  margin: 20px 0 10px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+.section-label:first-child { margin-top: 0; }
+
+.ex-list { display: flex; flex-direction: column; gap: 10px; }
+
+.ex-card {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  background: var(--surface);
+  border-radius: 18px;
+  /* La bande de couleur à gauche (la vraie couleur arrive à l'étape 3) */
+  border-left: 6px solid var(--card-color, var(--border));
+  user-select: none;
+  -webkit-user-select: none;
+}
+.ex-main {
+  flex: 1;
+  min-width: 0;
+  padding: 14px 4px 14px 14px;
+  cursor: pointer;
+  border-radius: 12px;
+}
+.ex-main:active { opacity: 0.7; }
+.ex-name { font-size: 19px; font-weight: 700; line-height: 1.25; overflow-wrap: anywhere; }
+.ex-sets {
+  margin-top: 4px;
+  font-size: 32px;
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+}
+.ex-sets .unit { margin-left: 6px; font-size: 17px; font-weight: 600; color: var(--text-dim); }
+.ex-sets.empty { font-size: 16px; font-weight: 500; color: var(--text-faint); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.chip {
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-dim);
+}
+.ex-note { margin-top: 8px; font-size: 15px; color: var(--text-dim); white-space: pre-wrap; overflow-wrap: anywhere; }
+
+.ex-side {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px;
+}
+.drag-handle {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  font-size: 20px;
+  color: var(--text-faint);
+  cursor: grab;
+  touch-action: none; /* empêche la page de défiler quand on attrape la poignée */
+}
+
+/* Échauffements : plus discrets */
+.ex-card.warmup { background: transparent; box-shadow: inset 0 0 0 1px var(--border); }
+.ex-card.warmup .ex-main { padding-top: 10px; padding-bottom: 10px; }
+.ex-card.warmup .ex-name { font-size: 16px; font-weight: 600; color: var(--text-dim); }
+.ex-card.warmup .ex-sets { font-size: 20px; color: var(--text-dim); }
+
+/* Pendant le glisser-déposer */
+.is-sorting .sortable-item:not(.dragging) { transition: transform 0.18s ease; }
+.ex-card.dragging {
+  z-index: 5;
+  background: var(--surface-2);
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.55);
+}
+.ex-card.dragging .drag-handle { cursor: grabbing; }
+.no-select { user-select: none; -webkit-user-select: none; }
+
+.add-btn {
+  width: 100%;
+  min-height: 56px;
+  margin: 16px 0;
+  border-radius: 18px;
+  border: 1.5px dashed var(--border);
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--text);
+  transition: background 0.15s;
+}
+.add-btn:active { background: var(--surface); }
+
+/* ---------- Boutons ---------- */
+.btn {
+  width: 100%;
+  min-height: 52px;
+  padding: 0 16px;
+  border-radius: 14px;
+  font-size: 17px;
+  font-weight: 700;
+  transition: opacity 0.15s;
+}
+.btn:active { opacity: 0.75; }
+.btn-primary { background: var(--text); color: var(--bg); }
+.btn-secondary { background: var(--surface-2); color: var(--text); }
+.btn-danger { background: rgba(255, 69, 58, 0.15); color: #ff6b61; }
+
+/* ---------- Panneaux qui montent du bas ---------- */
+html.no-scroll, html.no-scroll body { overflow: hidden; }
+
+.sheet-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0);
+  transition: background 0.22s ease;
+}
+.sheet-overlay.open { background: rgba(0, 0, 0, 0.55); }
+.sheet {
+  width: 100%;
+  max-width: 560px;
+  max-height: 92dvh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 8px 16px calc(var(--safe-bottom) + 20px);
+  background: var(--surface);
+  border-radius: 24px 24px 0 0;
+  transform: translateY(100%);
+  transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.sheet-overlay.open .sheet { transform: none; }
+.sheet-head {
+  position: sticky;
+  top: -8px;
+  z-index: 1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin: -8px -16px 8px;
+  padding: 14px 8px 8px 16px;
+  background: var(--surface);
+}
+.sheet-title { margin: 0; font-size: 20px; overflow-wrap: anywhere; }
+.sheet-title::first-letter { text-transform: uppercase; }
+.sheet-close {
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  font-size: 16px;
+  color: var(--text-dim);
+}
+
+/* Sur ordinateur (écran large), le panneau s'affiche au centre */
+@media (min-width: 700px) {
+  .sheet-overlay { align-items: center; }
+  .sheet { border-radius: 24px; max-height: 86vh; transform: translateY(24px); opacity: 0; transition: transform 0.22s ease, opacity 0.22s ease; }
+  .sheet-overlay.open .sheet { opacity: 1; }
+}
+
+.action-list { display: flex; flex-direction: column; gap: 8px; }
+.action-btn {
+  min-height: 56px;
+  padding: 0 16px;
+  border-radius: 14px;
+  background: var(--surface-2);
+  text-align: left;
+  font-size: 17px;
+  font-weight: 600;
+}
+.action-btn:active { opacity: 0.75; }
+.action-btn.danger { color: #ff6b61; }
+
+/* Choix du jour cible quand on copie */
+.copy-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
+.copy-day {
+  min-height: 64px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 2px;
+  border-radius: 14px;
+  background: var(--surface-2);
+  text-align: left;
+}
+.copy-day:disabled { opacity: 0.35; cursor: default; }
+.copy-day:not(:disabled):active { opacity: 0.75; }
+.copy-day-name { font-weight: 700; }
+.copy-day-name::first-letter { text-transform: uppercase; }
+.copy-day-sub {
+  max-width: 100%;
+  font-size: 13px;
+  color: var(--text-dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ---------- Formulaire ---------- */
+.form .field:first-child { margin-top: 4px; }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.input-lg { font-size: 19px; font-weight: 600; }
+.input.invalid { border-color: #ff6b61; animation: shake 0.3s; }
+.textarea { min-height: 72px; resize: vertical; line-height: 1.4; }
+.form-actions { display: flex; flex-direction: column; gap: 10px; margin-top: 24px; }
+
+.stepper { display: flex; align-items: stretch; gap: 6px; }
+.stepper-btn {
+  width: 52px;
+  min-height: 52px;
+  flex-shrink: 0;
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  font-size: 26px;
+  font-weight: 500;
+  line-height: 1;
+}
+.stepper-btn:active { opacity: 0.7; }
+.stepper-input {
+  flex: 1;
+  min-width: 0;
+  min-height: 52px;
+  padding: 0 6px;
+  font: inherit;
+  font-size: 22px;
+  font-weight: 700;
+  text-align: center;
+  color: var(--text);
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+.stepper-input::placeholder { color: var(--text-faint); }
+
+.quick-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.quick-chip {
+  min-height: 36px;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-dim);
+}
+.quick-chip:active { opacity: 0.7; }
+
+/* ---------- Message temporaire ("toast") ---------- */
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: calc(var(--safe-bottom) + 80px);
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: max-content;
+  max-width: calc(100% - 32px);
+  padding: 10px 10px 10px 16px;
+  border-radius: 14px;
+  background: #2b2f38;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  font-size: 15px;
+  opacity: 0;
+  transform: translate(-50%, 10px);
+  transition: opacity 0.2s, transform 0.2s;
+}
+.toast.show { opacity: 1; transform: translate(-50%, 0); }
+.toast-btn { min-height: 36px; padding: 0 10px; font-weight: 700; color: var(--today); }
+
 /* ---------- Barre de navigation du bas ---------- */
 .tabbar {
   position: fixed;
@@ -267,6 +569,11 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--today); out
 @keyframes fade-in {
   from { opacity: 0; transform: translateY(6px); }
   to { opacity: 1; transform: none; }
+}
+
+@keyframes shake {
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
 }
 
 /* Si l'utilisateur a réduit les animations dans les réglages de son appareil */

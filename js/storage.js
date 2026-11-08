@@ -3,6 +3,47 @@
 const STORAGE_KEY = 'calisthenie-data';
 const DATA_VERSION = 1;
 
+// Fabrique un identifiant unique, ex. "ex_lq3k9a1f2b"
+function newId(prefix) {
+  return `${prefix}_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
+}
+
+// Un exercice avec toutes ses cases (les cases données dans "fields" remplacent les valeurs par défaut)
+function createExercise(fields = {}) {
+  return Object.assign({
+    id: newId('ex'),
+    name: '',
+    libraryId: null,   // lien vers la bibliothèque (étape 5)
+    category: null,    // catégorie de couleur (étape 3)
+    type: 'reps',      // "reps" ou "hold"
+    sets: null,        // null = pas encore rempli
+    target: null,      // nombre de reps, ou secondes de maintien
+    weightKg: 0,
+    restSec: null,
+    role: 'main',      // "warmup" (échauffement) ou "main" (principal)
+    note: '',
+    color: null,       // couleur perso (étape 3)
+  }, fields);
+}
+
+// Copie indépendante d'un exercice, avec un nouvel identifiant
+function cloneExercise(exercise) {
+  return Object.assign(JSON.parse(JSON.stringify(exercise)), { id: newId('ex') });
+}
+
+// Copie indépendante d'un jour entier
+function cloneDay(day) {
+  return { title: day.title, rest: day.rest, exercises: day.exercises.map(cloneExercise) };
+}
+
+// Range les échauffements avant les exercices principaux (sans changer l'ordre à l'intérieur)
+function sortByRole(day) {
+  day.exercises = [
+    ...day.exercises.filter((e) => e.role === 'warmup'),
+    ...day.exercises.filter((e) => e.role !== 'warmup'),
+  ];
+}
+
 // Un jour vide
 function createEmptyDay() {
   return { title: '', rest: false, exercises: [] };
@@ -36,7 +77,9 @@ function normalizeData(data) {
   ['A', 'B'].forEach((w) => {
     data.weeks[w] = data.weeks[w] || {};
     DAY_KEYS.forEach((key) => {
-      data.weeks[w][key] = Object.assign(createEmptyDay(), data.weeks[w][key]);
+      const day = Object.assign(createEmptyDay(), data.weeks[w][key]);
+      day.exercises = (day.exercises || []).map((ex) => createExercise(ex));
+      data.weeks[w][key] = day;
     });
   });
   return data;
