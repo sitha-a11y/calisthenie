@@ -43,6 +43,25 @@ document.addEventListener('visibilitychange', () => {
   }
 });
 
+// Hors connexion : on installe le service worker (voir sw.js).
+// Il ne marche que sur une adresse sécurisée (https) ou sur localhost.
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch((error) => console.warn('Service worker non installé :', error));
+  });
+}
+
+// On demande au navigateur de ne pas effacer nos données s'il manque de place
+if (navigator.storage && navigator.storage.persist) {
+  navigator.storage.persist().catch(() => {});
+}
+
+// L'app est-elle ouverte depuis l'écran d'accueil (et pas dans Safari) ?
+function isInstalled() {
+  return window.navigator.standalone === true
+    || (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
+}
+
 // Au lancement : semaine et jour d'aujourd'hui
 WeekView.goToToday();
 App.show('session');

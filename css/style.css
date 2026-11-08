@@ -942,6 +942,7 @@ html.no-scroll, html.no-scroll body { overflow: hidden; }
 .perf-delete { grid-column: 3; grid-row: 1; font-size: 15px; }
 
 .pin-row { margin: -4px 0 8px; }
+.install-steps { margin: 0; padding-left: 22px; color: var(--text-dim); line-height: 1.6; }
 
 /* Case à cocher "Mettre aussi à jour les autres jours" */
 .check-row {

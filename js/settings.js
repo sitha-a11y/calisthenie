@@ -5,12 +5,26 @@ const SettingsView = {
     const root = document.getElementById('view-settings');
     root.replaceChildren(
       el('h1', { class: 'page-title' }, 'Réglages'),
+      isInstalled() ? null : this.renderInstallCard(),
       this.renderWeekCard(),
       this.renderEquipmentCard(),
       this.renderTestCard(),
       this.renderBackupCard(),
       this.renderCategoriesCard(),
       this.renderProgramCard(),
+    );
+  },
+
+  // Comment installer l'app (affiché seulement quand elle est ouverte dans le navigateur)
+  renderInstallCard() {
+    return el('div', { class: 'card' },
+      el('h2', { class: 'card-title' }, 'Installer sur l’iPhone'),
+      el('ol', { class: 'install-steps' },
+        el('li', {}, 'Ouvre cette page dans Safari.'),
+        el('li', {}, 'Touche le bouton Partager (le carré avec une flèche vers le haut).'),
+        el('li', {}, 'Choisis « Sur l’écran d’accueil », puis « Ajouter ».'),
+      ),
+      el('p', { class: 'hint' }, 'L’app s’ouvrira en plein écran et marchera sans connexion. Cette carte disparaît une fois l’app installée.'),
     );
   },
 
