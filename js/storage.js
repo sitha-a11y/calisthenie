@@ -128,6 +128,8 @@ function createDefaultData() {
       lastExport: null,
       reminderSnoozedUntil: null, // rappel de sauvegarde mis en pause jusqu'à cette date
       vestKg: 7,                  // poids du gilet lesté
+      testCycleStart: toISODate(mondayOf(new Date())), // départ du cycle de 4 semaines (la 4e = semaine de test)
+      testBannerDismissed: null,  // lundi de la semaine de test dont le bandeau a été fermé
     },
     categories: createDefaultCategories(),
     weeks: { A: createEmptyWeek(), B: createEmptyWeek() },

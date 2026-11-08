@@ -135,6 +135,7 @@ const WeekView = {
     // La clé "data-key" change à chaque jour → relance la petite animation d'apparition
     return el('div', { class: 'day-content', 'data-key': this.week + this.day },
       Backup.renderReminder(() => this.render()),
+      renderTestBanner(() => this.render()),
       labelRow,
       this.renderDailyBlocks(date),
       body,

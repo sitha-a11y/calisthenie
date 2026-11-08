@@ -7,9 +7,27 @@ const SettingsView = {
       el('h1', { class: 'page-title' }, 'Réglages'),
       this.renderWeekCard(),
       this.renderEquipmentCard(),
+      this.renderTestCard(),
       this.renderBackupCard(),
       this.renderCategoriesCard(),
       this.renderProgramCard(),
+    );
+  },
+
+  // Semaine de test : toutes les 4 semaines
+  renderTestCard() {
+    const now = isTestWeek();
+    return el('div', { class: 'card' },
+      el('h2', { class: 'card-title' }, 'Semaine de test'),
+      el('p', { class: 'muted' },
+        'Toutes les 4 semaines, un rappel te propose de noter tes max sur les exercices épinglés. ',
+        el('strong', {}, now
+          ? 'Cette semaine est une semaine de test.'
+          : `Prochaine : semaine du ${formatLongDate(nextTestWeekMonday())}.`)),
+      now ? null : el('button', {
+        type: 'button', class: 'btn btn-secondary',
+        onclick: () => { setThisWeekAsTest(); this.render(); showToast('Cette semaine est une semaine de test'); },
+      }, 'Faire de cette semaine une semaine de test'),
     );
   },
 

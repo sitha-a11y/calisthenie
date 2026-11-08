@@ -92,6 +92,7 @@ const ExerciseList = {
         type: 'button', class: 'perf-log-btn',
         onclick: stop(() => LogSheet.open({ name: ex.name, exercise: ex, onDone: onChange })),
       }, '+ Noter'),
+      isTestWeek() && isPinned(ex.name) ? el('span', { class: 'test-badge' }, '🎯 Test : note ton max') : null,
       el('button', {
         type: 'button', class: 'perf-stats',
         'aria-label': `Fiche de ${ex.name}`,

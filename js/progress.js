@@ -173,6 +173,50 @@ async function levelUp(ex, onChange) {
   });
 }
 
+// ---------- Semaine de test (toutes les 4 semaines) ----------
+
+// Les semaines sont comptées depuis testCycleStart : 1, 2, 3, puis la 4e est une semaine de test
+function isTestWeek(date = new Date()) {
+  const weeks = Math.round(daysBetween(parseISODate(appData.settings.testCycleStart), mondayOf(date)) / 7);
+  return ((weeks % 4) + 4) % 4 === 3;
+}
+
+// Lundi de la prochaine semaine de test (ou de celle en cours)
+function nextTestWeekMonday(date = new Date()) {
+  const monday = mondayOf(date);
+  for (let i = 0; i < 4; i++) {
+    const d = new Date(monday);
+    d.setDate(d.getDate() + 7 * i);
+    if (isTestWeek(d)) return d;
+  }
+  return monday;
+}
+
+// Faire de la semaine en cours une semaine de test (le cycle repart de là)
+function setThisWeekAsTest() {
+  const start = mondayOf(new Date());
+  start.setDate(start.getDate() - 21);
+  appData.settings.testCycleStart = toISODate(start);
+  appData.settings.testBannerDismissed = null;
+  saveData(appData);
+}
+
+// Bandeau discret, affiché pendant la semaine de test (jusqu'à ce qu'on appuie sur OK)
+function renderTestBanner(onChange, { showLink = true } = {}) {
+  const thisMonday = toISODate(mondayOf(new Date()));
+  if (!isTestWeek() || appData.settings.testBannerDismissed === thisMonday) return null;
+  return el('div', { class: 'reminder test-banner', role: 'status' },
+    el('span', { class: 'reminder-text' }, '🎯 Semaine de test : note tes max sur les exercices épinglés.'),
+    el('div', { class: 'reminder-actions' },
+      showLink ? el('button', { type: 'button', class: 'reminder-btn primary', onclick: () => App.show('progress') }, 'Voir') : null,
+      el('button', {
+        type: 'button', class: 'reminder-btn',
+        onclick: () => { appData.settings.testBannerDismissed = thisMonday; saveData(appData); onChange(); },
+      }, 'OK'),
+    ),
+  );
+}
+
 // ---------- Épinglés ----------
 
 function isPinned(name) {
@@ -264,6 +308,7 @@ const ProgressView = {
 
     root.replaceChildren(
       el('h1', { class: 'page-title' }, 'Progrès'),
+      renderTestBanner(() => this.render(), { showLink: false }),
       el('h2', { class: 'section-label' }, 'Épinglés'),
       appData.pinned.length
         ? el('div', { class: 'progress-list' }, appData.pinned.map((name) => this.renderRow(name)))
@@ -288,7 +333,8 @@ const ProgressView = {
       },
     },
       el('div', { class: 'progress-row-main' },
-        el('span', { class: 'progress-row-name' }, displayName),
+        el('span', { class: 'progress-row-name' }, displayName,
+          isTestWeek() && isPinned(name) ? el('span', { class: 'test-badge' }, '🎯 Test') : null),
         el('span', { class: 'progress-row-sub' }, stats
           ? `Record ${formatPerf(stats.record.value, stats.record.unit)} · Dernier ${formatPerf(stats.last.value, stats.last.unit)} (${formatShortDate(stats.last.date)})`
           : 'Pas encore noté'),

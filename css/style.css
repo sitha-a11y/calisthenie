@@ -942,6 +942,18 @@ html.no-scroll, html.no-scroll body { overflow: hidden; }
 .perf-delete { grid-column: 3; grid-row: 1; font-size: 15px; }
 
 .pin-row { margin: -4px 0 8px; }
+.test-badge {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: color-mix(in srgb, #fcc419 16%, transparent);
+  color: #ffe066;
+  font-size: 12px;
+  font-weight: 700;
+  vertical-align: middle;
+}
+.perf-row .test-badge { margin-left: 0; }
 .rule-block {
   margin-bottom: 14px;
   padding: 10px 12px;
