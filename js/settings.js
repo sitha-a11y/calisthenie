@@ -6,9 +6,30 @@ const SettingsView = {
     root.replaceChildren(
       el('h1', { class: 'page-title' }, 'Réglages'),
       this.renderWeekCard(),
+      this.renderEquipmentCard(),
       this.renderBackupCard(),
       this.renderCategoriesCard(),
       this.renderProgramCard(),
+    );
+  },
+
+  // Matériel : poids du gilet lesté
+  renderEquipmentCard() {
+    return el('div', { class: 'card' },
+      el('h2', { class: 'card-title' }, 'Matériel'),
+      field('Poids du gilet lesté (kg)', numberStepper({
+        value: appData.settings.vestKg,
+        step: 0.5,
+        min: 0,
+        decimals: true,
+        label: 'Poids du gilet en kg',
+        onChange: (v) => {
+          if (v === null) return; // champ vidé : on garde l'ancien poids
+          appData.settings.vestKg = v;
+          saveData(appData);
+        },
+      })),
+      el('p', { class: 'hint' }, 'Affiché sur les exercices marqués « Gilet lesté ».'),
     );
   },
 
@@ -53,7 +74,7 @@ const SettingsView = {
     return el('div', { class: 'card' },
       el('h2', { class: 'card-title' }, 'Programme de départ'),
       el('p', { class: 'muted' },
-        'Remet ton programme A/B et tes étirements du matin tels qu’au premier lancement (sets/reps vides).'),
+        'Remet ton programme A/B et tes étirements du matin tels qu’au premier lancement (avec les sets, reps et repos prévus).'),
       el('button', {
         type: 'button',
         class: 'btn btn-secondary',

@@ -47,8 +47,7 @@ const LIBRARY_DATA = [
       ['Kipping PU', 'D'], ['Chest to Bar PU', 'D'], ['Kipping MU', 'D'], ['Muscle Up', 'D', 1],
     ] },
     { id: 'one-arm-pull-up', name: 'One Arm Pull Up', category: 'pull', type: 'reps', items: [
-      // Le chart a "Ring L-Pull Up" (vert) ET "Wide Ring L-Pull Up" (bleu) : niveau à confirmer
-      ['Wide Ring L-Pull Up', '?'], ['Wide Ring Pull Up', 'D'], ['Ring Archer Pull Up', 'I'],
+      ['Wide Ring L-Pull Up', 'I'], ['Wide Ring Pull Up', 'D'], ['Ring Archer Pull Up', 'I'],
       ['One Arm Pull Up Negative', 'I'], ['One Arm Pull Up', 'I', 1],
     ] },
   ] },

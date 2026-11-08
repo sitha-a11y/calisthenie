@@ -98,12 +98,23 @@ const WeekView = {
       this.saveAndRender();
     }, 'Jour de repos');
 
+    // Note du jour : "~70 min", "Natation"…
+    const noteInput = (placeholder, extraClass = '') => el('input', {
+      class: 'day-note ' + extraClass,
+      type: 'text',
+      value: dayData.note,
+      placeholder,
+      'aria-label': 'Note du jour',
+      oninput: (e) => { dayData.note = e.target.value; saveData(appData); },
+      onkeydown: (e) => { if (e.key === 'Enter') e.target.blur(); },
+    });
+
     let body;
     if (dayData.rest) {
       body = el('div', { class: 'rest-block' },
         el('div', { class: 'rest-icon', 'aria-hidden': 'true' }, '☾'),
         el('p', { class: 'rest-title' }, 'Repos'),
-        el('p', { class: 'rest-sub' }, 'Récupère bien.'),
+        noteInput('Ajouter une note (ex. natation)', 'centered'),
       );
     } else {
       const titleInput = el('input', {
@@ -115,7 +126,10 @@ const WeekView = {
         oninput: (e) => { dayData.title = e.target.value; saveData(appData); },
         onkeydown: (e) => { if (e.key === 'Enter') e.target.blur(); },
       });
-      body = el('div', {}, titleInput, ExerciseList.render(dayData, () => this.saveAndRender()));
+      body = el('div', {},
+        titleInput,
+        noteInput('Note du jour (ex. ~70 min)'),
+        ExerciseList.render(dayData, () => this.saveAndRender()));
     }
 
     // La clé "data-key" change à chaque jour → relance la petite animation d'apparition

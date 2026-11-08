@@ -41,10 +41,13 @@ function createExercise(fields = {}) {
     name: '',
     libraryId: null,   // lien vers la bibliothèque
     category: null,    // catégorie de couleur
-    type: 'reps',      // "reps" ou "hold"
+    type: 'reps',      // "reps", "hold" (secondes) ou "distance" (mètres)
     sets: null,        // null = pas encore rempli
-    target: null,      // nombre de reps, ou secondes de maintien
+    target: null,      // nombre de reps, secondes de maintien, ou mètres
+    toMax: false,      // true = "max" (jusqu'à l'échec) au lieu d'un nombre
+    perSide: null,     // null, "côté", "jambe" ou "bras" → affiché "/jambe"
     weightKg: 0,
+    vest: false,       // true = lesté avec le gilet (poids réglé dans Réglages)
     restSec: null,
     role: 'main',      // "warmup" (échauffement) ou "main" (principal)
     note: '',
@@ -59,7 +62,7 @@ function cloneExercise(exercise) {
 
 // Copie indépendante d'un jour entier
 function cloneDay(day) {
-  return { title: day.title, rest: day.rest, exercises: day.exercises.map(cloneExercise) };
+  return { title: day.title, note: day.note, rest: day.rest, exercises: day.exercises.map(cloneExercise) };
 }
 
 // Range les échauffements avant les exercices principaux (sans changer l'ordre à l'intérieur)
@@ -72,7 +75,7 @@ function sortByRole(owner) {
 }
 
 function createEmptyDay() {
-  return { title: '', rest: false, exercises: [] };
+  return { title: '', note: '', rest: false, exercises: [] }; // note : ex. "~70 min" ou "Natation"
 }
 
 function createEmptyWeek() {
@@ -115,6 +118,7 @@ function createDefaultData() {
       createdAt: toISODate(new Date()),
       lastExport: null,
       reminderSnoozedUntil: null, // rappel de sauvegarde mis en pause jusqu'à cette date
+      vestKg: 7,                  // poids du gilet lesté
     },
     categories: createDefaultCategories(),
     weeks: { A: createEmptyWeek(), B: createEmptyWeek() },

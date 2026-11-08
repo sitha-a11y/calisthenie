@@ -46,7 +46,8 @@ const ExerciseList = {
 
   renderCard(ex, owner, onChange) {
     const chips = [];
-    if (ex.weightKg > 0) chips.push(el('span', { class: 'chip' }, `+${formatNumber(ex.weightKg)} kg`));
+    if (ex.vest) chips.push(el('span', { class: 'chip' }, `Gilet (${formatNumber(appData.settings.vestKg)} kg)`));
+    else if (ex.weightKg > 0) chips.push(el('span', { class: 'chip' }, `+${formatNumber(ex.weightKg)} kg`));
     if (ex.restSec) chips.push(el('span', { class: 'chip' }, `Repos ${formatDuration(ex.restSec)}`));
 
     const color = exerciseColor(ex);
@@ -78,32 +79,41 @@ const ExerciseList = {
     );
   },
 
-  // "3 × 12 reps", "4 × 20 s", "Sets à définir"…
-  renderSets(ex) {
-    const isHold = ex.type === 'hold';
-    const unit = (text) => el('span', { class: 'unit' }, text);
-    const targetText = ex.target === null ? null : (isHold ? formatDuration(ex.target) : String(ex.target));
+  // Découpe l'affichage des sets en { main: "3 × 12", unit: "reps /jambe" } (ou null si rien n'est rempli)
+  setsParts(ex) {
+    let target = null;
+    let unit = '';
+    if (ex.toMax) target = 'max';
+    else if (ex.target !== null) {
+      if (ex.type === 'hold') target = formatDuration(ex.target);
+      else if (ex.type === 'distance') target = `${formatNumber(ex.target)} m`;
+      else { target = String(ex.target); unit = 'reps'; }
+    }
+    if (target === null && ex.sets === null) return null;
 
-    if (ex.sets !== null && targetText !== null) {
-      return el('div', { class: 'ex-sets' }, `${ex.sets} × ${targetText}`, isHold ? null : unit('reps'));
-    }
-    if (targetText !== null) {
-      return el('div', { class: 'ex-sets' }, targetText, isHold ? null : unit('reps'));
-    }
-    if (ex.sets !== null) {
-      return el('div', { class: 'ex-sets' }, String(ex.sets), unit(ex.sets > 1 ? 'sets' : 'set'));
-    }
-    return el('div', { class: 'ex-sets empty' }, isHold ? 'Durée à définir' : 'Sets à définir');
+    let main;
+    if (ex.sets !== null && target !== null) main = `${ex.sets} × ${target}`;
+    else if (target !== null) main = target;
+    else { main = String(ex.sets); unit = ex.sets > 1 ? 'sets' : 'set'; }
+
+    if (ex.perSide) unit = `${unit} /${ex.perSide}`.trim();
+    return { main, unit };
   },
 
-  // Version courte en texte, ex. "3 × 12" ou "2 × 30 s" (vide si rien n'est rempli)
+  // "3 × 12 reps", "4 × 20 s", "2 × 45 s /côté", "6 × 20 m", "Sets à définir"…
+  renderSets(ex) {
+    const parts = this.setsParts(ex);
+    if (!parts) return el('div', { class: 'ex-sets empty' }, ex.type === 'hold' ? 'Durée à définir' : 'Sets à définir');
+    return el('div', { class: 'ex-sets' }, parts.main, parts.unit ? el('span', { class: 'unit' }, parts.unit) : null);
+  },
+
+  // Version courte en texte, ex. "3 × 12", "2 × 30 s", "3 × 5 /bras" (vide si rien n'est rempli)
   compactSets(ex) {
-    const isHold = ex.type === 'hold';
-    const target = ex.target === null ? null : (isHold ? formatDuration(ex.target) : String(ex.target));
-    if (ex.sets !== null && target !== null) return `${ex.sets} × ${target}`;
-    if (target !== null) return isHold ? target : `${target} reps`;
-    if (ex.sets !== null) return `${ex.sets} sets`;
-    return '';
+    const parts = this.setsParts(ex);
+    if (!parts) return '';
+    // Avec des sets, "reps" est sous-entendu : "3 × 12" suffit
+    const unit = ex.sets !== null ? parts.unit.replace(/^reps\s*/, '') : parts.unit;
+    return unit ? `${parts.main} ${unit}` : parts.main;
   },
 
   // ---------- Actions ----------

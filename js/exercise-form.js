@@ -20,10 +20,10 @@ const ExerciseForm = {
       oninput: (e) => { draft.name = e.target.value; nameInput.classList.remove('invalid'); },
     });
 
-    // Le titre du champ "cible" dépend du type (reps ou secondes)
+    // Le titre du champ "cible" dépend du type (reps, secondes ou mètres)
     const targetLabel = el('span', { class: 'field-label' });
     const updateTargetLabel = () => {
-      targetLabel.textContent = draft.type === 'hold' ? 'Secondes par set' : 'Reps par set';
+      targetLabel.textContent = { reps: 'Reps par set', hold: 'Secondes par set', distance: 'Mètres par set' }[draft.type];
     };
     updateTargetLabel();
 
@@ -52,8 +52,29 @@ const ExerciseForm = {
 
     const typeControl = segmentedControl([
       { value: 'reps', label: 'Reps' },
-      { value: 'hold', label: 'Hold (maintien)' },
+      { value: 'hold', label: 'Hold' },
+      { value: 'distance', label: 'Distance' },
     ], draft.type, (v) => { draft.type = v; updateTargetLabel(); });
+
+    // Cible : un nombre, ou "max" (le champ nombre se cache quand "max" est activé)
+    const targetWrap = el('div', {}, numberStepper({
+      value: draft.target,
+      step: () => ({ reps: 1, hold: 5, distance: 5 }[draft.type]),
+      label: 'Cible',
+      onChange: (v) => { draft.target = v; },
+    }));
+    targetWrap.hidden = draft.toMax;
+    const maxToggle = toggleSwitch(draft.toMax, (v) => { draft.toMax = v; targetWrap.hidden = v; },
+      'Max (jusqu’à l’échec)');
+
+    // Lest : un nombre de kg, ou le gilet lesté (son poids se règle dans Réglages)
+    const weightWrap = el('div', {}, numberStepper({
+      value: draft.weightKg, step: 1, decimals: true, label: 'Lest en kg',
+      onChange: (v) => { draft.weightKg = v ?? 0; },
+    }));
+    weightWrap.hidden = draft.vest;
+    const vestToggle = toggleSwitch(draft.vest, (v) => { draft.vest = v; weightWrap.hidden = v; },
+      `Gilet lesté (${formatNumber(appData.settings.vestKg)} kg)`);
 
     // Ligne "Bibliothèque : Front Lever · Intermédiaire ★" quand l'exercice y est relié
     const libInfo = el('div', { class: 'lib-link' });
@@ -121,22 +142,21 @@ const ExerciseForm = {
         onChange: (v) => { draft.sets = v; },
       })),
 
-      field(targetLabel, numberStepper({
-        value: draft.target,
-        step: () => (draft.type === 'hold' ? 5 : 1),
-        label: 'Cible',
-        onChange: (v) => { draft.target = v; },
-      })),
+      field(targetLabel, targetWrap, maxToggle),
 
-      field('Lest (kg)', numberStepper({
-        value: draft.weightKg, step: 1, decimals: true, label: 'Lest en kg',
-        onChange: (v) => { draft.weightKg = v ?? 0; },
-      })),
+      field('Par côté', choiceChips([
+        { value: null, label: 'Non' },
+        { value: 'côté', label: '/côté' },
+        { value: 'jambe', label: '/jambe' },
+        { value: 'bras', label: '/bras' },
+      ], draft.perSide, (v) => { draft.perSide = v; })),
+
+      field('Lest (kg)', vestToggle, weightWrap),
 
       field('Repos entre les sets (secondes)',
         restStepper,
         el('div', { class: 'quick-chips' },
-          [30, 60, 90, 120, 180].map((s) => el('button', {
+          [30, 60, 90, 120, 150, 180].map((s) => el('button', {
             type: 'button', class: 'quick-chip', onclick: () => restStepper.setValue(s),
           }, formatDuration(s))),
           el('button', { type: 'button', class: 'quick-chip', onclick: () => restStepper.setValue(null) }, 'Aucun'),
