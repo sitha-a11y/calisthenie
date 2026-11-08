@@ -64,6 +64,30 @@ function removePerf(name, entryId) {
   return record.entries.splice(index, 1)[0];
 }
 
+// ---------- Épinglés ----------
+
+function isPinned(name) {
+  return appData.pinned.some((p) => perfKey(p) === perfKey(name));
+}
+
+function setPinned(name, pinned) {
+  appData.pinned = appData.pinned.filter((p) => perfKey(p) !== perfKey(name));
+  if (pinned) appData.pinned.push(name);
+  saveData(appData);
+}
+
+// Retrouve un exercice d'après son nom dans les semaines A puis B : { exercise, owner } ou null
+function findExerciseByName(name) {
+  for (const w of ['A', 'B']) {
+    for (const key of DAY_KEYS) {
+      const day = appData.weeks[w][key];
+      const exercise = day.exercises.find((e) => perfKey(e.name) === perfKey(name));
+      if (exercise) return { exercise, owner: day };
+    }
+  }
+  return null;
+}
+
 // "lun. 9 nov."
 function formatShortDate(iso) {
   return parseISODate(iso).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' });
@@ -118,6 +142,55 @@ function perfChart(entries, unit, color) {
     svgEl('text', { x: W - right, y: H - 6, class: 'chart-label', 'text-anchor': 'end' }, formatShortDate(entries[entries.length - 1].date)),
   );
 }
+
+// ---------- Onglet "Progrès" ----------
+
+const ProgressView = {
+  render() {
+    const root = document.getElementById('view-progress');
+    const pinnedKeys = appData.pinned.map(perfKey);
+    const others = Object.values(appData.performances)
+      .filter((r) => r.entries.length && !pinnedKeys.includes(perfKey(r.name)))
+      .sort((a, b) => (perfStats(b.name).last.date > perfStats(a.name).last.date ? 1 : -1));
+
+    root.replaceChildren(
+      el('h1', { class: 'page-title' }, 'Progrès'),
+      el('h2', { class: 'section-label' }, 'Épinglés'),
+      appData.pinned.length
+        ? el('div', { class: 'progress-list' }, appData.pinned.map((name) => this.renderRow(name)))
+        : el('p', { class: 'hint' }, 'Épingle un exercice depuis sa fiche.'),
+      el('h2', { class: 'section-label' }, 'Autres exercices suivis'),
+      others.length
+        ? el('div', { class: 'progress-list' }, others.map((r) => this.renderRow(r.name)))
+        : el('p', { class: 'hint' }, 'Les exercices que tu notes apparaîtront ici.'),
+    );
+  },
+
+  renderRow(name) {
+    const record = appData.performances[perfKey(name)];
+    const displayName = record ? record.name : name;
+    const stats = perfStats(name);
+    return el('button', {
+      type: 'button',
+      class: 'progress-row',
+      onclick: () => {
+        const found = findExerciseByName(name);
+        ProgressSheet.open({ name: displayName, exercise: found ? found.exercise : null, onChange: () => this.render() });
+      },
+    },
+      el('div', { class: 'progress-row-main' },
+        el('span', { class: 'progress-row-name' }, displayName),
+        el('span', { class: 'progress-row-sub' }, stats
+          ? `Record ${formatPerf(stats.record.value, stats.record.unit)} · Dernier ${formatPerf(stats.last.value, stats.last.unit)} (${formatShortDate(stats.last.date)})`
+          : 'Pas encore noté'),
+      ),
+      el('span', {
+        class: `trend trend-big trend-${stats && stats.trend ? stats.trend : 'none'}`,
+        'aria-label': stats && stats.trend ? TREND_LABEL[stats.trend] : 'Pas de tendance',
+      }, stats && stats.trend ? TREND_SYMBOL[stats.trend] : '–'),
+    );
+  },
+};
 
 // ---------- Panneau "Noter" ----------
 
@@ -189,6 +262,7 @@ const ProgressSheet = {
       const unit = stats ? stats.last.unit : (exercise ? perfUnit(exercise) : 'reps');
 
       body.replaceChildren(
+        el('div', { class: 'pin-row' }, toggleSwitch(isPinned(name), (v) => { setPinned(name, v); onChange(); }, '★ Épinglé dans Progrès')),
         stats ? el('div', { class: 'perf-summary' },
           el('div', {}, el('strong', {}, formatPerf(stats.record.value, stats.record.unit)), el('span', {}, 'Record')),
           el('div', {}, el('strong', {}, formatPerf(stats.last.value, stats.last.unit)), el('span', {}, 'Dernier')),

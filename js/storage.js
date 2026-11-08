@@ -111,6 +111,11 @@ function dailyGroupIndexFor(routine, date) {
   return ((days % count) + count) % count;
 }
 
+// Exercices épinglés en haut de l'onglet Progrès (par nom)
+const DEFAULT_PINNED = [
+  'Pompes', 'Tractions', 'Ring Dip', 'Front Lever', 'Tuck Planche', 'Adv Tuck Planche', 'One Arm Pull Up', 'Kick-ups libres',
+];
+
 // ---------- Données complètes ----------
 
 function createDefaultData() {
@@ -131,6 +136,7 @@ function createDefaultData() {
     // Journal de performances, rangé par NOM d'exercice (partagé entre les jours) :
     // { "tractions": { name: "Tractions", entries: [{ id, date, value, unit, weightKg, note }] } }
     performances: {},
+    pinned: [...DEFAULT_PINNED],
   };
 }
 
@@ -173,6 +179,7 @@ function normalizeData(data) {
   Object.values(data.performances).forEach((record) => {
     record.entries = Array.isArray(record.entries) ? record.entries : [];
   });
+  data.pinned = Array.isArray(data.pinned) ? data.pinned : [...DEFAULT_PINNED];
   return data;
 }
 

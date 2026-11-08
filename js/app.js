@@ -19,6 +19,7 @@ const App = {
     if (view === 'session') WeekView.render();
     if (view === 'daily') DailyView.render();
     if (view === 'library') LibraryView.render();
+    if (view === 'progress') ProgressView.render();
     if (view === 'settings') SettingsView.render();
     window.scrollTo(0, 0);
   },
