@@ -172,6 +172,15 @@ const ExerciseForm = {
         oninput: (e) => { draft.note = e.target.value; },
       })),
 
+      field('Comment faire', el('textarea', {
+        class: 'input textarea',
+        rows: 3,
+        value: draft.howTo,
+        placeholder: 'Explication détaillée, affichée dans un bloc dépliable',
+        'aria-label': 'Comment faire',
+        oninput: (e) => { draft.howTo = e.target.value; },
+      })),
+
       el('div', { class: 'form-actions' },
         el('button', { type: 'submit', class: 'btn btn-primary' }, isNew ? 'Ajouter' : 'Enregistrer'),
         isNew ? null : el('button', {
@@ -192,6 +201,7 @@ const ExerciseForm = {
         return;
       }
       draft.note = draft.note.trim();
+      draft.howTo = (draft.howTo || '').trim();
       close();
       onSave(draft);
     }

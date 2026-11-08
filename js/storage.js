@@ -51,6 +51,7 @@ function createExercise(fields = {}) {
     restSec: null,
     role: 'main',      // "warmup" (échauffement) ou "main" (principal)
     note: '',
+    howTo: '',         // explication "Comment faire" (bloc dépliable)
     color: null,       // couleur perso (null = couleur de la catégorie)
   }, fields);
 }
@@ -96,6 +97,8 @@ function createDailyRoutine(fields = {}) {
     id: newId('daily'),
     name: 'Nouvelle routine',
     startDate: toISODate(new Date()), // ce jour-là, c'est le groupe 1 ; ensuite ça tourne
+    reminder: '', // rappel affiché en haut (ex. "Tension 6-7/10…")
+    rules: '',    // règles de progression affichées en bas
     groups: [createDailyGroup()],
   }, fields);
 }

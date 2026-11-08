@@ -65,8 +65,12 @@ const DailyView = {
           onclick: () => this.openRoutineMenu(routine),
         }, '⋯'),
       ),
+      routine.reminder ? el('p', { class: 'routine-reminder' }, routine.reminder) : null,
       tabs,
       group ? this.renderGroup(routine, group, index, todayIndex) : el('p', { class: 'hint' }, 'Ajoute un groupe avec « + ».'),
+      routine.rules ? el('div', { class: 'routine-rules' },
+        el('h3', { class: 'section-label' }, 'Progression'),
+        el('p', {}, routine.rules)) : null,
     );
   },
 
@@ -113,8 +117,33 @@ const DailyView = {
   openRoutineMenu(routine) {
     actionSheet(routine.name || 'Routine', [
       { label: 'Ajouter un groupe', onClick: () => this.addGroup(routine) },
+      { label: 'Modifier le rappel et la progression', onClick: () => this.editRoutineTexts(routine) },
       { label: 'Supprimer cette routine', danger: true, onClick: () => this.deleteRoutine(routine) },
     ]);
+  },
+
+  // Le rappel (en haut) et les règles de progression (en bas) de la routine
+  editRoutineTexts(routine) {
+    const draft = { reminder: routine.reminder, rules: routine.rules };
+    const textarea = (key, placeholder, label) => el('textarea', {
+      class: 'input textarea', rows: 3, value: draft[key], placeholder, 'aria-label': label,
+      oninput: (e) => { draft[key] = e.target.value; },
+    });
+    const form = el('form', {
+      class: 'form',
+      onsubmit: (e) => {
+        e.preventDefault();
+        routine.reminder = draft.reminder.trim();
+        routine.rules = draft.rules.trim();
+        close();
+        this.saveAndRender();
+      },
+    },
+      field('Rappel (affiché en haut)', textarea('reminder', 'Ex. Tension 6-7/10, jamais de douleur', 'Rappel')),
+      field('Règles de progression (affichées en bas)', textarea('rules', 'Ex. Quand c’est facile, va plus loin', 'Règles de progression')),
+      el('div', { class: 'form-actions' }, el('button', { type: 'submit', class: 'btn btn-primary' }, 'Enregistrer')),
+    );
+    const close = openSheet(routine.name || 'Routine', form);
   },
 
   async deleteRoutine(routine) {

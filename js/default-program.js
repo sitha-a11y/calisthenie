@@ -147,33 +147,74 @@ const DEFAULT_PROGRAM = {
   },
 
   // Tous les jours, 7 j/7 : groupe 1 un jour, groupe 2 le lendemain, sans s'arrêter
+  // howTo = explication "Comment faire" ; noLibrary = ne pas l'ajouter à la bibliothèque
   daily: [
-    { name: 'Étirements matin (10-12 min)', groups: [
-      { name: 'Hanches + haut du corps', color: '#4dabf7', exercises: [
-        P('Poignets (flexion/extension au sol)', 'mobility', { type: 'hold', sets: 2, target: 30 }),
-        P('Figure 4 stretch (pigeon)', 'mobility', { type: 'hold', sets: 2, target: 45, perSide: 'côté' }),
-        P('Hip flexor stretch', 'mobility', { type: 'hold', sets: 2, target: 45, perSide: 'côté' }),
-        P('Chest stretch', 'mobility', { type: 'hold', sets: 2, target: 30, perSide: 'côté' }),
-        P('Lat stretch', 'mobility', { type: 'hold', sets: 2, target: 30, perSide: 'côté' }),
-        P('Chevilles (genou vers le mur)', 'mobility', { type: 'reps', sets: 2, target: 10, perSide: 'côté' }),
-      ] },
-      { name: 'Grand écart + arrière des jambes', color: '#9775fa', exercises: [
-        P('Poignets (flexion/extension au sol)', 'mobility', { type: 'hold', sets: 2, target: 30 }),
-        P('Pancake stretch', 'mobility', { type: 'hold', sets: 2, target: 60 }),
-        P('Middle split', 'mobility', { type: 'hold', sets: 2, target: 60 }),
-        P('Hamstring stretch', 'mobility', { type: 'hold', sets: 2, target: 45, perSide: 'côté' }),
-        P('Butterfly stretch', 'mobility', { type: 'hold', sets: 2, target: 45 }),
-        P('German hang', 'mobility', { lib: 'German Hang', type: 'hold', sets: 3, target: 15,
-          note: 'Ou étirement épaules au mur si pas de barre' }),
-      ] },
-    ] },
+    {
+      name: 'Étirements matin',
+      reminder: 'Tension 6-7/10, jamais de douleur, pas de rebond, respire lentement.',
+      rules: 'Quand une position devient facile, va un peu plus loin en amplitude, sans allonger la durée. '
+        + 'Une fois par mois, prends une photo de ton grand écart pour voir ta progression.',
+      groups: [
+        { name: 'Hanches + haut du corps (~15 min)', color: '#4dabf7', exercises: [
+          W('Échauffement', 'mobility', { noLibrary: true, type: 'hold', sets: 1, target: 120,
+            howTo: 'Cercles de bras, cercles de hanches, 20 jumping jacks. Juste de quoi te réchauffer.' }),
+          P('Poignets', 'mobility', { type: 'hold', sets: 4, target: 30, note: '2 en flexion + 2 en extension',
+            howTo: 'À quatre pattes, mains à plat. Doigts vers les genoux, recule doucement les fesses (extension). '
+              + 'Puis dos des mains au sol, doigts vers toi (flexion). Bras tendus.' }),
+          P('Figure 4 stretch (pigeon)', 'mobility', { type: 'hold', sets: 3, target: 45, perSide: 'côté',
+            howTo: 'Au sol, jambe avant pliée devant toi, tibia en travers. Jambe arrière tendue derrière. '
+              + 'Garde le bassin droit, puis penche le buste vers l’avant en gardant le dos long. '
+              + 'Tu dois sentir la fesse de la jambe avant.' }),
+          P('Hip flexor stretch', 'mobility', { type: 'hold', sets: 3, target: 45, perSide: 'côté',
+            howTo: 'En fente, genou arrière au sol (sur un coussin). Serre la fesse de la jambe arrière et rentre le ventre '
+              + 'pour basculer le bassin, puis avance doucement. Tu dois sentir l’avant de la hanche arrière. '
+              + 'Essentiel pour le grand écart facial.' }),
+          P('Chest stretch', 'mobility', { type: 'hold', sets: 2, target: 40, perSide: 'côté',
+            howTo: 'Avant-bras contre un cadre de porte, coude à hauteur d’épaule (90°). Tourne doucement le buste vers '
+              + 'l’autre côté. Tu dois sentir le pec et l’avant de l’épaule.' }),
+          P('Lat stretch', 'mobility', { type: 'hold', sets: 2, target: 40, perSide: 'côté',
+            howTo: 'Mains sur une table ou sur la barre à hauteur de hanches. Recule les fesses, dos plat, et laisse '
+              + 'descendre la poitrine vers le sol. Pour cibler un côté, décale les hanches de l’autre côté.' }),
+          P('Chevilles', 'mobility', { type: 'reps', sets: 2, target: 12, perSide: 'côté',
+            howTo: 'Face au mur, pied à environ 10 cm du mur, talon au sol. Pousse le genou vers le mur sans décoller '
+              + 'le talon. Quand c’est facile, recule le pied de 1-2 cm.' }),
+        ] },
+        { name: 'Grand écart + arrière des jambes (~15 min)', color: '#9775fa', exercises: [
+          W('Échauffement', 'mobility', { noLibrary: true, type: 'hold', sets: 1, target: 120,
+            howTo: 'Cercles de hanches, 10 squats, 10 balancements de jambes de chaque côté.' }),
+          P('Poignets', 'mobility', { type: 'hold', sets: 2, target: 30,
+            howTo: 'Comme dans le groupe 1. À quatre pattes, doigts vers les genoux, recule doucement les fesses.' }),
+          P('Pancake stretch', 'mobility', { type: 'hold', sets: 3, target: 60, note: 'Contracter-relâcher',
+            howTo: 'Assis, jambes écartées et tendues, genoux vers le plafond. Bascule le bassin vers l’avant '
+              + '(le ventre va vers le sol, pas la tête), dos plat, mains devant toi. Pendant chaque série : '
+              + '20 s de relâchement, 5 s à pousser les talons fort contre le sol, puis relâche et descends un peu plus. '
+              + 'Répète jusqu’à 60 s.' }),
+          P('Middle split (grand écart facial)', 'mobility', { type: 'hold', sets: 3, target: 60, note: 'Contracter-relâcher',
+            howTo: 'Debout, mains au sol devant toi, écarte les jambes progressivement, pointes de pieds vers l’avant. '
+              + 'Quand tu es au maximum : presse 5 s les pieds contre le sol comme pour les rapprocher, relâche, '
+              + 'puis glisse un peu plus loin. Sur des chaussettes, ça glisse mieux.' }),
+          P('Hamstring stretch', 'mobility', { type: 'hold', sets: 3, target: 45, perSide: 'côté',
+            howTo: 'Talon posé sur un support bas (chaise, marche), jambe tendue. Garde le dos plat et penche-toi depuis '
+              + 'les hanches, comme si tu poussais les fesses vers l’arrière. Ne t’enroule pas pour aller chercher les orteils.' }),
+          P('Butterfly stretch', 'mobility', { type: 'hold', sets: 2, target: 45,
+            howTo: 'Assis, plantes de pieds collées, talons proches du bassin. Dos droit, puis appuie doucement avec '
+              + 'les coudes sur les genoux pour les faire descendre.' }),
+          P('German hang', 'mobility', { lib: 'German Hang', type: 'hold', sets: 3, target: 20,
+            howTo: 'Aux anneaux ou à la barre, passe les jambes entre les bras puis derrière toi (comme un skin the cat), '
+              + 'et laisse doucement descendre les épaules vers l’arrière. Garde les pieds au sol si tu peux, pour doser. '
+              + 'Si tu as une douleur pointue dans l’épaule, tu arrêtes. '
+              + 'Si tu n’as pas de barre ce jour-là : épaules contre le mur, 3 × 30 s.' }),
+        ] },
+      ],
+    },
   ],
 };
 
 // Applique le programme aux données : remplace les semaines A/B et les routines quotidiennes,
 // et ajoute tes exercices perso dans la famille "Hors chart" (sans doublons).
 // Les couleurs, la progression, le poids du gilet et les autres exercices perso sont conservés.
-function applyDefaultProgram(data) {
+// Avec { onlyDaily: true }, seules les routines quotidiennes sont remplacées (les semaines A/B ne bougent pas).
+function applyDefaultProgram(data, { onlyDaily = false } = {}) {
   // Exercice perso → on le cherche (ou on le crée) dans "Hors chart"
   const customItem = (spec) => {
     let item = data.customLibrary.find((c) =>
@@ -201,7 +242,7 @@ function applyDefaultProgram(data) {
 
   const makeExercise = (spec) => createExercise({
     name: spec.name,
-    libraryId: spec.lib ? chartId(spec.lib) : customItem(spec).id,
+    libraryId: spec.noLibrary ? null : (spec.lib ? chartId(spec.lib) : customItem(spec).id),
     category: spec.category,
     type: spec.type || 'reps',
     sets: spec.sets === undefined ? null : spec.sets,
@@ -212,9 +253,10 @@ function applyDefaultProgram(data) {
     restSec: defaultRest(spec),
     role: spec.warmup ? 'warmup' : 'main',
     note: spec.note || '',
+    howTo: spec.howTo || '',
   });
 
-  ['A', 'B'].forEach((w) => {
+  if (!onlyDaily) ['A', 'B'].forEach((w) => {
     data.weeks[w] = createEmptyWeek();
     DAY_KEYS.forEach((key) => {
       const day = data.weeks[w][key];
@@ -232,15 +274,23 @@ function applyDefaultProgram(data) {
     });
   });
 
-  data.dailyRoutines = DEFAULT_PROGRAM.daily.map((routine) => createDailyRoutine({
-    name: routine.name,
-    startDate: toISODate(new Date()), // aujourd'hui = groupe 1
-    groups: routine.groups.map((g) => createDailyGroup({
+  data.dailyRoutines = DEFAULT_PROGRAM.daily.map((routine) => {
+    // Si la routine existait déjà (même début de nom, même nombre de groupes),
+    // on garde sa rotation : le groupe du jour ne change pas.
+    const previous = (data.dailyRoutines || []).find((r) =>
+      r.name.startsWith(routine.name) && r.groups.length === routine.groups.length);
+    return createDailyRoutine({
+      name: routine.name,
+      reminder: routine.reminder || '',
+      rules: routine.rules || '',
+      startDate: previous ? previous.startDate : toISODate(new Date()), // sinon : aujourd'hui = groupe 1
+      groups: routine.groups.map((g) => createDailyGroup({
       name: g.name,
       color: g.color,
-      exercises: g.exercises.map(makeExercise),
-    })),
-  }));
+        exercises: g.exercises.map(makeExercise),
+      })),
+    });
+  });
 
   return data;
 }

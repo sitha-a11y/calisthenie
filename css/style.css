@@ -651,13 +651,68 @@ html.no-scroll, html.no-scroll body { overflow: hidden; }
 }
 .daily-head .chevron { margin-left: auto; }
 .daily-list { list-style: none; margin: 0; padding: 0 14px 12px; }
-.daily-list li {
+.daily-row, .daily-howto summary {
   display: flex;
   align-items: center;
   gap: 10px;
-  min-height: 34px;
+  min-height: 38px;
   font-size: 16px;
 }
+.daily-howto summary { cursor: pointer; list-style: none; }
+.daily-howto summary::-webkit-details-marker { display: none; }
+.daily-howto summary .chevron { font-size: 18px; }
+.daily-howto[open] summary .chevron { transform: rotate(90deg); }
+.daily-howto p {
+  margin: 0 0 8px 22px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: var(--surface-2);
+  font-size: 15px;
+  line-height: 1.45;
+  color: var(--text-dim);
+}
+.daily-reminder { margin: 0 14px 6px; font-size: 14px; color: var(--text-dim); }
+
+/* Bloc dépliable "Comment faire" sur les cartes */
+.howto { margin-top: 10px; }
+.howto summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-dim);
+  cursor: pointer;
+  list-style: none;
+}
+.howto summary::-webkit-details-marker { display: none; }
+.howto summary::after { content: "›"; font-size: 16px; transition: transform 0.2s; }
+.howto[open] summary::after { transform: rotate(90deg); }
+.howto p {
+  margin: 8px 0 0;
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--text-dim);
+  white-space: pre-wrap;
+}
+
+/* Rappel et progression d'une routine quotidienne */
+.routine-reminder {
+  margin: 10px 0 0;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, #fcc419 12%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, #fcc419 35%, transparent);
+  font-size: 15px;
+  font-weight: 600;
+  color: #ffe066;
+}
+.routine-rules { margin-top: 16px; }
+.routine-rules p { margin: 0; font-size: 15px; line-height: 1.5; color: var(--text-dim); }
 .daily-ex-name { flex: 1; min-width: 0; color: var(--text-dim); }
 .daily-ex-sets { font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .daily-empty { padding: 0 14px 12px; margin: 0; }

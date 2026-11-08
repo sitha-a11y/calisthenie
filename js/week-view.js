@@ -159,14 +159,22 @@ const WeekView = {
             el('span', { class: 'daily-group' }, group.name),
             el('span', { class: 'chevron', 'aria-hidden': 'true' }, '›'),
           ),
+          routine.reminder ? el('p', { class: 'daily-reminder' }, routine.reminder) : null,
           group.exercises.length
             ? el('ul', { class: 'daily-list' }, group.exercises.map((ex) => {
               const color = exerciseColor(ex);
-              return el('li', {},
+              const row = [
                 el('span', { class: 'dot' + (color ? '' : ' empty'), style: color ? `background:${color}` : null }),
                 el('span', { class: 'daily-ex-name' }, ex.name),
                 el('span', { class: 'daily-ex-sets' }, ExerciseList.compactSets(ex)),
-              );
+              ];
+              // Avec une explication : la ligne se déplie pour l'afficher
+              if (ex.howTo) {
+                return el('li', {}, el('details', { class: 'daily-howto' },
+                  el('summary', {}, row, el('span', { class: 'chevron', 'aria-hidden': 'true' }, '›')),
+                  el('p', {}, ex.howTo)));
+              }
+              return el('li', {}, el('div', { class: 'daily-row' }, row));
             }))
             : el('p', { class: 'hint daily-empty' }, 'Aucun exercice dans ce groupe.'),
         );

@@ -75,20 +75,35 @@ const SettingsView = {
       el('h2', { class: 'card-title' }, 'Programme de départ'),
       el('p', { class: 'muted' },
         'Remet ton programme A/B et tes étirements du matin tels qu’au premier lancement (avec les sets, reps et repos prévus).'),
-      el('button', {
-        type: 'button',
-        class: 'btn btn-secondary',
-        onclick: async () => {
-          const ok = await confirmSheet('Charger le programme de départ ?',
-            'Les semaines A et B et les routines quotidiennes seront remplacées. Tes couleurs, ta progression et ta bibliothèque perso sont gardées.',
-            'Charger', { danger: true });
-          if (!ok) return;
-          applyDefaultProgram(appData);
-          saveData(appData);
-          WeekView.goToToday();
-          showToast('Programme de départ chargé');
-        },
-      }, 'Charger mon programme de départ'),
+      el('div', { class: 'form-actions' },
+        el('button', {
+          type: 'button',
+          class: 'btn btn-secondary',
+          onclick: async () => {
+            const ok = await confirmSheet('Charger le programme de départ ?',
+              'Les semaines A et B et les routines quotidiennes seront remplacées. Tes couleurs, ta progression et ta bibliothèque perso sont gardées.',
+              'Charger', { danger: true });
+            if (!ok) return;
+            applyDefaultProgram(appData);
+            saveData(appData);
+            WeekView.goToToday();
+            showToast('Programme de départ chargé');
+          },
+        }, 'Charger mon programme de départ'),
+        el('button', {
+          type: 'button',
+          class: 'btn btn-secondary',
+          onclick: async () => {
+            const ok = await confirmSheet('Recharger les étirements du matin ?',
+              'Seules les routines quotidiennes sont remplacées. Tes semaines A et B ne changent pas, et le groupe du jour reste le même.',
+              'Recharger', { danger: true });
+            if (!ok) return;
+            applyDefaultProgram(appData, { onlyDaily: true });
+            saveData(appData);
+            showToast('Étirements du matin rechargés');
+          },
+        }, 'Recharger seulement les étirements'),
+      ),
     );
   },
 

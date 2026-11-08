@@ -67,6 +67,7 @@ const ExerciseList = {
         this.renderSets(ex),
         chips.length ? el('div', { class: 'chips' }, chips) : null,
         ex.note ? el('div', { class: 'ex-note' }, ex.note) : null,
+        this.renderHowTo(ex),
       ),
       el('div', { class: 'ex-side' },
         el('button', {
@@ -76,6 +77,20 @@ const ExerciseList = {
         }, '⋯'),
         el('div', { class: 'drag-handle', 'aria-label': 'Glisser pour déplacer', title: 'Glisser pour déplacer' }, '⠿'),
       ),
+    );
+  },
+
+  // Bloc dépliable "Comment faire" (fermé par défaut).
+  // "details" est un élément HTML qui se déplie tout seul quand on touche son titre ("summary").
+  renderHowTo(ex) {
+    if (!ex.howTo) return null;
+    return el('details', {
+      class: 'howto',
+      onclick: (e) => e.stopPropagation(), // toucher le bloc ne doit pas ouvrir le formulaire
+      onkeydown: (e) => e.stopPropagation(),
+    },
+      el('summary', {}, 'Comment faire'),
+      el('p', {}, ex.howTo),
     );
   },
 
