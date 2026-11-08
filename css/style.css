@@ -10,6 +10,9 @@
   --text-dim: #9aa0ab;
   --text-faint: #646a76;
   --today: #4dabf7;
+  --accent: #4dabf7;
+  --accent-soft: rgba(77, 171, 247, 0.2);
+  --accent-text: #a5d8ff;
   --radius: 20px;
   --radius-sm: 12px;
   --tap: 48px; /* taille minimale d'un bouton facile à toucher */
@@ -85,6 +88,14 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--today); out
   transition: background 0.2s, color 0.2s;
 }
 .seg.active { background: var(--surface-2); color: var(--text); box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3); }
+
+/* Version "accent" (formulaires) : le choix actif est en bleu, impossible à rater */
+.segmented.accent { background: var(--surface-2); }
+.segmented.accent .seg.active {
+  background: var(--accent-soft);
+  color: var(--accent-text);
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
 
 /* Les 7 onglets des jours */
 .day-tabs {
@@ -376,6 +387,7 @@ html.no-scroll, html.no-scroll body { overflow: hidden; }
   max-width: 560px;
   max-height: 92dvh;
   overflow-y: auto;
+  overflow-x: hidden; /* sécurité : rien ne peut dépasser sur les côtés */
   overscroll-behavior: contain;
   padding: 8px 16px calc(var(--safe-bottom) + 20px);
   background: var(--surface);
@@ -456,13 +468,13 @@ html.no-scroll, html.no-scroll body { overflow: hidden; }
 
 /* ---------- Formulaire ---------- */
 .form .field:first-child { margin-top: 4px; }
-.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.field { min-width: 0; }
 .input-lg { font-size: 19px; font-weight: 600; }
 .input.invalid { border-color: #ff6b61; animation: shake 0.3s; }
 .textarea { min-height: 72px; resize: vertical; line-height: 1.4; }
 .form-actions { display: flex; flex-direction: column; gap: 10px; margin-top: 24px; }
 
-.stepper { display: flex; align-items: stretch; gap: 6px; }
+.stepper { display: flex; align-items: stretch; gap: 6px; width: 100%; }
 .stepper-btn {
   width: 52px;
   min-height: 52px;

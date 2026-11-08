@@ -47,18 +47,17 @@ const ExerciseForm = {
         { value: 'hold', label: 'Hold (maintien)' },
       ], draft.type, (v) => { draft.type = v; updateTargetLabel(); })),
 
-      el('div', { class: 'form-grid' },
-        field('Sets', numberStepper({
-          value: draft.sets, step: 1, label: 'Sets',
-          onChange: (v) => { draft.sets = v; },
-        })),
-        field(targetLabel, numberStepper({
-          value: draft.target,
-          step: () => (draft.type === 'hold' ? 5 : 1),
-          label: 'Cible',
-          onChange: (v) => { draft.target = v; },
-        })),
-      ),
+      field('Sets', numberStepper({
+        value: draft.sets, step: 1, label: 'Sets',
+        onChange: (v) => { draft.sets = v; },
+      })),
+
+      field(targetLabel, numberStepper({
+        value: draft.target,
+        step: () => (draft.type === 'hold' ? 5 : 1),
+        label: 'Cible',
+        onChange: (v) => { draft.target = v; },
+      })),
 
       field('Lest (kg)', numberStepper({
         value: draft.weightKg, step: 1, decimals: true, label: 'Lest en kg',

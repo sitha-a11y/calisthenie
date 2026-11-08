@@ -63,7 +63,8 @@ function toggleSwitch(checked, onChange, label) {
 
 // Boutons à choix unique côte à côte (ex. Reps | Hold)
 function segmentedControl(options, current, onChange) {
-  const wrap = el('div', { class: 'segmented' });
+  // "accent" : l'option choisie est bien visible (fond et bordure bleus)
+  const wrap = el('div', { class: 'segmented accent' });
   options.forEach((opt) => {
     const btn = el('button', {
       type: 'button',
