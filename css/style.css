@@ -942,6 +942,21 @@ html.no-scroll, html.no-scroll body { overflow: hidden; }
 .perf-delete { grid-column: 3; grid-row: 1; font-size: 15px; }
 
 .pin-row { margin: -4px 0 8px; }
+
+/* Case à cocher "Mettre aussi à jour les autres jours" */
+.check-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  cursor: pointer;
+}
+.check-row span { display: flex; flex-direction: column; gap: 2px; }
+.check-days { font-size: 14px; color: var(--text-dim); }
+.check-days::first-letter { text-transform: uppercase; }
+.checkbox { width: 24px; height: 24px; margin: 0; flex-shrink: 0; accent-color: var(--accent); }
 .test-badge {
   display: inline-block;
   margin-left: 8px;

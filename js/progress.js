@@ -150,12 +150,58 @@ function askNewTarget(item, suggested) {
   });
 }
 
+// Les autres jours (semaines A et B) qui ont un exercice du même nom : [{ exercise, label }]
+function otherOccurrences(ex) {
+  const found = [];
+  ['A', 'B'].forEach((w) => DAY_KEYS.forEach((key) => {
+    appData.weeks[w][key].exercises.forEach((e) => {
+      if (e !== ex && perfKey(e.name) === perfKey(ex.name)) found.push({ exercise: e, label: `${DAY_LONG[key]} ${w}` });
+    });
+  }));
+  return found;
+}
+
+// Confirmation de "Monter d'un cran", avec la case "aussi les autres jours".
+// Renvoie une promesse : { ok, updateOthers }
+function confirmLevelUp(ex, next, others) {
+  return new Promise((resolve) => {
+    let answered = false;
+    const answer = (ok) => {
+      if (answered) return;
+      answered = true;
+      close();
+      resolve({ ok, updateOthers: ok && others.length > 0 && checkbox.checked });
+    };
+    const checkbox = el('input', { type: 'checkbox', checked: true, class: 'checkbox' });
+    const content = el('div', {},
+      el('p', { class: 'muted' },
+        `« ${ex.name} » sera remplacé par « ${next.name} » dans cette séance. Les sets, le repos et les notes sont gardés.`),
+      others.length ? el('label', { class: 'check-row' },
+        checkbox,
+        el('span', {},
+          el('strong', {}, `Mettre aussi à jour les autres jours (${others.length})`),
+          el('span', { class: 'check-days' }, others.map((o) => o.label).join(' · ')),
+        ),
+      ) : null,
+      el('div', { class: 'form-actions' },
+        el('button', { type: 'button', class: 'btn btn-primary', onclick: () => answer(true) }, 'Monter d’un cran'),
+        el('button', { type: 'button', class: 'btn btn-secondary', onclick: () => answer(false) }, 'Annuler'),
+      ),
+    );
+    const close = openSheet('Monter d’un cran ?', content);
+    // Fermé autrement (✕, clic à côté) : c'est un "non"
+    const observer = new MutationObserver(() => {
+      if (!document.body.contains(content)) { observer.disconnect(); answer(false); }
+    });
+    observer.observe(document.body, { childList: true });
+  });
+}
+
 async function levelUp(ex, onChange) {
   const next = nextLibraryItem(ex);
   if (!next) return;
-  const ok = await confirmSheet('Monter d’un cran ?',
-    `« ${ex.name} » sera remplacé par « ${next.name} » dans cette séance. Les sets, le repos et les notes sont gardés.`,
-    'Monter d’un cran');
+  const others = otherOccurrences(ex);
+  const { ok, updateOthers } = await confirmLevelUp(ex, next, others);
   if (!ok) return;
 
   // Holds de skill : on repart à 5 s (règle de progression) ; sinon on garde la cible
@@ -164,12 +210,19 @@ async function levelUp(ex, onChange) {
   const suggested = isSkillHold ? 5 : (next.type === ex.type ? ex.target : null);
   const target = await askNewTarget(next, suggested);
 
-  const backup = JSON.parse(JSON.stringify(ex));
-  Object.assign(ex, { name: next.name, libraryId: next.id, type: next.type, target });
+  // Les exercices à modifier : celui-ci, plus les autres jours si la case est cochée
+  const targets = [ex, ...(updateOthers ? others.map((o) => o.exercise) : [])];
+  const backups = targets.map((e) => JSON.parse(JSON.stringify(e)));
+  targets.forEach((e) => {
+    // Autres jours : même cible pour un hold de skill, sinon chacun garde la sienne
+    const ownTarget = e === ex || isSkillHold || next.type !== e.type ? target : e.target;
+    Object.assign(e, { name: next.name, libraryId: next.id, type: next.type, target: ownTarget });
+  });
   onChange();
-  showToast(`Monté d’un cran : ${next.name}`, {
+  const count = targets.length > 1 ? ` (${targets.length} jours)` : '';
+  showToast(`Monté d’un cran : ${next.name}${count}`, {
     actionLabel: 'Annuler',
-    onAction: () => { Object.assign(ex, backup); onChange(); },
+    onAction: () => { targets.forEach((e, i) => Object.assign(e, backups[i])); onChange(); },
   });
 }
 
