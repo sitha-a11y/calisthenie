@@ -6,8 +6,45 @@ const SettingsView = {
     root.replaceChildren(
       el('h1', { class: 'page-title' }, 'Réglages'),
       this.renderWeekCard(),
+      this.renderBackupCard(),
       this.renderCategoriesCard(),
       this.renderProgramCard(),
+    );
+  },
+
+  // Exporter / importer
+  renderBackupCard() {
+    const last = appData.settings.lastExport;
+    const fileInput = el('input', {
+      type: 'file',
+      accept: '.json,application/json',
+      class: 'visually-hidden',
+      'aria-hidden': 'true',
+      tabindex: '-1',
+      onchange: async (e) => {
+        const file = e.target.files[0];
+        e.target.value = ''; // pour pouvoir réimporter le même fichier
+        if (file && await Backup.importFile(file)) this.render();
+      },
+    });
+
+    return el('div', { class: 'card' },
+      el('h2', { class: 'card-title' }, 'Sauvegarde'),
+      el('p', { class: 'muted' },
+        'Tes données restent dans ce navigateur. Exporte-les de temps en temps dans un fichier pour ne rien perdre. ',
+        el('strong', {}, last ? `Dernier export : ${formatLongDate(parseISODate(last))}.` : 'Aucun export pour l’instant.')),
+      el('div', { class: 'form-actions' },
+        el('button', {
+          type: 'button', class: 'btn btn-primary',
+          onclick: async () => { if (await Backup.exportData()) this.render(); },
+        }, 'Exporter mes données'),
+        el('button', {
+          type: 'button', class: 'btn btn-secondary',
+          onclick: () => fileInput.click(),
+        }, 'Importer un fichier'),
+      ),
+      fileInput,
+      el('p', { class: 'hint' }, 'Importer remplace toutes les données actuelles (une confirmation est demandée).'),
     );
   },
 

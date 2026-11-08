@@ -811,6 +811,36 @@ html.no-scroll, html.no-scroll body { overflow: hidden; }
 }
 .lib-link:empty { display: none; }
 
+/* ---------- Rappel de sauvegarde ---------- */
+.reminder {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+  margin-bottom: 14px;
+  padding: 10px 10px 10px 14px;
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--border);
+  font-size: 14px;
+  color: var(--text-dim);
+}
+.reminder-text { flex: 1 1 180px; }
+.reminder-actions { display: flex; gap: 6px; }
+.reminder-btn {
+  min-height: 36px;
+  padding: 0 12px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-dim);
+}
+.reminder-btn.primary { background: var(--surface-2); color: var(--text); }
+
+/* Caché à l'écran (mais toujours utilisable par le code) */
+.visually-hidden { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+
 /* ---------- Message temporaire ("toast") ---------- */
 .toast {
   position: fixed;

@@ -114,6 +114,7 @@ function createDefaultData() {
       weekAReference: toISODate(mondayOf(new Date())), // par défaut : cette semaine = A
       createdAt: toISODate(new Date()),
       lastExport: null,
+      reminderSnoozedUntil: null, // rappel de sauvegarde mis en pause jusqu'à cette date
     },
     categories: createDefaultCategories(),
     weeks: { A: createEmptyWeek(), B: createEmptyWeek() },
