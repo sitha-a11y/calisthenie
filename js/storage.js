@@ -140,6 +140,8 @@ function createDefaultData() {
     // { "tractions": { name: "Tractions", entries: [{ id, date, value, unit, weightKg, note }] } }
     performances: {},
     pinned: [...DEFAULT_PINNED],
+    // Séances terminées en mode séance : [{ id, date, kind, week, day, routineId, title, durationSec, setsDone }]
+    sessionLog: [],
   };
 }
 
@@ -183,6 +185,7 @@ function normalizeData(data) {
     record.entries = Array.isArray(record.entries) ? record.entries : [];
   });
   data.pinned = Array.isArray(data.pinned) ? data.pinned : [...DEFAULT_PINNED];
+  data.sessionLog = Array.isArray(data.sessionLog) ? data.sessionLog : [];
   return data;
 }
 

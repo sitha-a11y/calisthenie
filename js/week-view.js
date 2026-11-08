@@ -129,6 +129,7 @@ const WeekView = {
       body = el('div', {},
         titleInput,
         noteInput('Note du jour (ex. ~70 min)'),
+        this.renderDoneBadge(date),
         dayData.exercises.length ? el('button', {
           type: 'button', class: 'launch-btn',
           onclick: () => SessionPlayer.launchDay(this.week, this.day),
@@ -144,6 +145,14 @@ const WeekView = {
       this.renderDailyBlocks(date),
       body,
       el('div', { class: 'card' }, restToggle));
+  },
+
+  // "✓ Séance faite · mar. 10 nov. · 42 min" (si faite en mode séance à cette date)
+  renderDoneBadge(date) {
+    const entry = sessionDoneOn({ kind: 'day', week: this.week, day: this.day }, toISODate(date));
+    if (!entry) return null;
+    return el('p', { class: 'done-badge' },
+      `✓ Séance faite · ${formatShortDate(entry.date)} · ${formatSessionDuration(entry.durationSec)}`);
   },
 
   // Le groupe du jour de chaque routine quotidienne (ex. Étirements matin · Groupe 2)
@@ -162,6 +171,8 @@ const WeekView = {
           },
             el('span', { class: 'daily-name' }, routine.name),
             el('span', { class: 'daily-group' }, group.name),
+            sessionDoneOn({ kind: 'daily', routineId: routine.id }, toISODate(date))
+              ? el('span', { class: 'daily-done', 'aria-label': 'Faits' }, '✓') : null,
             el('span', { class: 'chevron', 'aria-hidden': 'true' }, '›'),
           ),
           routine.reminder ? el('p', { class: 'daily-reminder' }, routine.reminder) : null,

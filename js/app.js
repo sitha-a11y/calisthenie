@@ -65,3 +65,6 @@ function isInstalled() {
 // Au lancement : semaine et jour d'aujourd'hui
 WeekView.goToToday();
 App.show('session');
+
+// Une séance était en cours quand l'app a été fermée ? On propose de la reprendre.
+SessionPlayer.checkResume();

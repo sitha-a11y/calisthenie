@@ -94,6 +94,7 @@ const SessionPlayer = {
   root: null,
   ticker: null,
   draftValue: null, // valeur affichée dans le − / + du set en cours
+  wakeLock: null,
   countdown: null,  // chrono d'un hold en cours : { stage: "prep"|"run", mode: "down"|"up", side, endsAt, runStart }
   timerEl: null,    // éléments mis à jour à chaque "tick" (sans tout redessiner)
   barEl: null,
@@ -148,6 +149,7 @@ const SessionPlayer = {
     document.documentElement.classList.add('no-scroll', 'in-session');
     clearInterval(this.ticker);
     this.ticker = setInterval(() => this.tick(), 250);
+    this.requestWakeLock();
     this.render();
   },
 
@@ -156,6 +158,7 @@ const SessionPlayer = {
     this.ticker = null;
     if (this.root) this.root.remove();
     this.root = null;
+    this.releaseWakeLock();
     document.documentElement.classList.remove('no-scroll', 'in-session');
     this.session = null;
     localStorage.removeItem(SESSION_KEY);
@@ -481,18 +484,153 @@ const SessionPlayer = {
     this.countdown = null;
     s.phase = 'recap';
     s.finishedAt = SessionClock.now();
+    // Séance marquée comme faite (si au moins un set a été fait)
+    const setsDone = s.items.reduce((n, i) => n + i.results.filter(Boolean).length, 0);
+    if (setsDone > 0 && !s.logged) {
+      appData.sessionLog.push({
+        id: s.id, date: s.date, kind: s.kind, week: s.week || null, day: s.day || null,
+        routineId: s.routineId || null, title: s.title,
+        durationSec: Math.round((s.finishedAt - s.startedAt) / 1000), setsDone,
+      });
+      saveData(appData);
+      s.logged = true;
+    }
     this.persist();
     this.render();
   },
 
-  // ---------- Récap (complété à l'étape S3) ----------
+  // ---------- Récapitulatif ----------
+
+  // Les perfs à ajouter au journal : exercices épinglés, max (−1), et ceux dont j'ai modifié la valeur
+  saveCandidates() {
+    return this.session.items.filter((item) => {
+      if (item.role === 'warmup') return false;
+      const done = item.results.filter((r) => r && r.value !== null && r.value !== undefined);
+      if (!done.length) return false;
+      return isPinned(item.name) || item.maxMinusOne || done.some((r) => r.adjusted);
+    });
+  },
+
+  saveToProgress() {
+    const s = this.session;
+    const saved = this.saveCandidates();
+    saved.forEach((item) => {
+      const values = item.results.filter((r) => r && r.value !== null && r.value !== undefined).map((r) => r.value);
+      addPerf(item.name, {
+        date: s.date,
+        value: Math.max(...values), // le meilleur set
+        unit: perfUnit(item),
+        weightKg: item.vest ? appData.settings.vestKg : item.weightKg || 0,
+        note: 'Mode séance',
+      });
+    });
+    saveData(appData);
+    s.saved = saved.length;
+    this.persist();
+    this.render();
+    showToast(`${saved.length} perf(s) ajoutée(s) à tes progrès`);
+  },
 
   renderRecap() {
+    const s = this.session;
+    const durationSec = Math.round((s.finishedAt - s.startedAt) / 1000);
+    const done = s.items.filter((i) => i.results.some(Boolean));
+    const notDone = s.items.length - done.length;
+    const candidates = this.saveCandidates();
+
+    const rows = s.items.map((item) => {
+      const results = item.results.filter(Boolean);
+      const status = results.length
+        ? `Fait : ${results.map((r) => (r.value === null || r.value === undefined ? '✓' : formatPerf(r.value, perfUnit(item)))).join(' · ')}`
+        : 'Passé';
+      return el('li', { class: 'recap-row' + (results.length ? '' : ' skipped') },
+        el('span', { class: 'dot', style: `background:${item.color || 'var(--text-faint)'}` }),
+        el('div', { class: 'recap-main' },
+          el('span', { class: 'recap-name' }, item.name),
+          el('span', { class: 'recap-detail' }, status, ` (cible ${item.sets} × ${sessionTargetText(item)})`),
+        ),
+      );
+    });
+
     return el('div', { class: 'session-screen recap' },
       el('main', { class: 'session-body' },
-        el('h1', { class: 'session-name' }, 'Séance terminée'),
+        el('span', { class: 'session-cat recap-cat' }, 'Séance terminée'),
+        el('h1', { class: 'recap-title' }, s.title),
+        el('div', { class: 'perf-summary recap-summary' },
+          el('div', {}, el('strong', {}, formatSessionDuration(durationSec)), el('span', {}, 'Durée')),
+          el('div', {}, el('strong', {}, `${done.length} / ${s.items.length}`), el('span', {}, 'Exercices faits')),
+          el('div', {}, el('strong', {}, String(notDone)), el('span', {}, 'Passés')),
+        ),
+        el('ul', { class: 'recap-list' }, rows),
+        s.saved !== undefined
+          ? el('p', { class: 'recap-saved' }, `✓ Enregistré dans tes progrès (${s.saved})`)
+          : (candidates.length
+            ? el('button', { type: 'button', class: 'session-start-btn recap-save', onclick: () => this.saveToProgress() },
+              `Enregistrer dans mes progrès (${candidates.length})`)
+            : el('p', { class: 'hint' }, 'Rien à enregistrer : aucun exercice épinglé, max (−1) ou valeur modifiée.')),
+        candidates.length && s.saved === undefined
+          ? el('p', { class: 'hint' }, 'Exercices épinglés, max (−1) et valeurs modifiées : ',
+            candidates.map((c) => c.name).join(', '), '.')
+          : null,
         el('button', { type: 'button', class: 'session-done-btn', onclick: () => this.close() }, 'Fermer'),
       ),
     );
   },
+
+  // ---------- Reprise et écran allumé ----------
+
+  // Au démarrage de l'app : une séance était en cours ? On propose de la reprendre.
+  async checkResume() {
+    let saved = null;
+    try { saved = JSON.parse(localStorage.getItem(SESSION_KEY)); } catch (e) { /* illisible */ }
+    if (!saved || !Array.isArray(saved.items) || !saved.items.length) return;
+    const where = saved.phase === 'recap' ? 'récapitulatif' : `exercice ${saved.index + 1} / ${saved.items.length}`;
+    const ok = await confirmSheet('Reprendre la séance ?', `${saved.title} — ${where}.`, 'Reprendre');
+    if (ok) {
+      this.session = saved;
+      this.draftValue = null;
+      this.countdown = null;
+      Beeper.unlock();
+      this.open();
+    } else {
+      localStorage.removeItem(SESSION_KEY);
+    }
+  },
+
+  // Garder l'écran allumé (Screen Wake Lock API, si le navigateur la connaît)
+  async requestWakeLock() {
+    try {
+      if ('wakeLock' in navigator && !this.wakeLock) {
+        this.wakeLock = await navigator.wakeLock.request('screen');
+        this.wakeLock.addEventListener('release', () => { this.wakeLock = null; });
+      }
+    } catch (e) { /* pas disponible : tant pis */ }
+  },
+
+  releaseWakeLock() {
+    if (this.wakeLock) this.wakeLock.release().catch(() => {});
+    this.wakeLock = null;
+  },
 };
+
+// "42 min", "1 h 05", "45 s"
+function formatSessionDuration(seconds) {
+  if (seconds < 60) return `${seconds} s`;
+  const minutes = Math.round(seconds / 60);
+  if (minutes < 60) return `${minutes} min`;
+  return `${Math.floor(minutes / 60)} h ${String(minutes % 60).padStart(2, '0')}`;
+}
+
+// L'écran se rallume / l'app revient au premier plan : on redemande l'écran allumé
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && SessionPlayer.root) {
+    SessionPlayer.requestWakeLock();
+    SessionPlayer.tick();
+  }
+});
+
+// Séance faite à une date ? (pour la coche ✓)
+function sessionDoneOn(filter, dateISO) {
+  return appData.sessionLog.find((entry) => entry.date === dateISO
+    && Object.entries(filter).every(([k, v]) => entry[k] === v)) || null;
+}
