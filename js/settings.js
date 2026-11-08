@@ -74,17 +74,18 @@ const SettingsView = {
     return el('div', { class: 'card' },
       el('h2', { class: 'card-title' }, 'Programme de départ'),
       el('p', { class: 'muted' },
-        'Remet ton programme A/B et tes étirements du matin tels qu’au premier lancement (avec les sets, reps et repos prévus).'),
+        'Remet ton programme des semaines A et B tel qu’au premier lancement (sets, reps et repos prévus). Les étirements du matin ont leur propre bouton.'),
       el('div', { class: 'form-actions' },
         el('button', {
           type: 'button',
           class: 'btn btn-secondary',
           onclick: async () => {
             const ok = await confirmSheet('Charger le programme de départ ?',
-              'Les semaines A et B et les routines quotidiennes seront remplacées. Tes couleurs, ta progression et ta bibliothèque perso sont gardées.',
+              'Les semaines A et B seront remplacées. Tes étirements du matin, tes couleurs, ta progression et ta bibliothèque perso sont gardés.',
               'Charger', { danger: true });
             if (!ok) return;
-            applyDefaultProgram(appData);
+            // Les étirements ne sont créés que s'il n'y en a pas encore
+            applyDefaultProgram(appData, { daily: appData.dailyRoutines.length === 0 });
             saveData(appData);
             WeekView.goToToday();
             showToast('Programme de départ chargé');
@@ -98,7 +99,7 @@ const SettingsView = {
               'Seules les routines quotidiennes sont remplacées. Tes semaines A et B ne changent pas, et le groupe du jour reste le même.',
               'Recharger', { danger: true });
             if (!ok) return;
-            applyDefaultProgram(appData, { onlyDaily: true });
+            applyDefaultProgram(appData, { weeks: false });
             saveData(appData);
             showToast('Étirements du matin rechargés');
           },
