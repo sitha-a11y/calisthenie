@@ -129,7 +129,7 @@ const WeekView = {
       body = el('div', {},
         titleInput,
         noteInput('Note du jour (ex. ~70 min)'),
-        ExerciseList.render(dayData, () => this.saveAndRender()));
+        ExerciseList.render(dayData, () => this.saveAndRender(), { tracking: true }));
     }
 
     // La clé "data-key" change à chaque jour → relance la petite animation d'apparition

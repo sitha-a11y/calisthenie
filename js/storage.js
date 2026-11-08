@@ -128,6 +128,9 @@ function createDefaultData() {
     dailyRoutines: [],
     customLibrary: [], // exercices ajoutés à la bibliothèque
     progress: {},      // statut des skills : { idExercice: "inProgress" | "done" }
+    // Journal de performances, rangé par NOM d'exercice (partagé entre les jours) :
+    // { "tractions": { name: "Tractions", entries: [{ id, date, value, unit, weightKg, note }] } }
+    performances: {},
   };
 }
 
@@ -166,6 +169,10 @@ function normalizeData(data) {
 
   data.customLibrary = Array.isArray(data.customLibrary) ? data.customLibrary : [];
   data.progress = data.progress && typeof data.progress === 'object' ? data.progress : {};
+  data.performances = data.performances && typeof data.performances === 'object' ? data.performances : {};
+  Object.values(data.performances).forEach((record) => {
+    record.entries = Array.isArray(record.entries) ? record.entries : [];
+  });
   return data;
 }
 

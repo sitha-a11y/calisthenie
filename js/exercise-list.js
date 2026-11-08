@@ -5,7 +5,9 @@
 // "onChange" = fonction appelée après chaque modification (pour enregistrer et réafficher).
 
 const ExerciseList = {
-  render(owner, onChange, { newDefaults = {}, emptyText = 'Aucun exercice pour l’instant.' } = {}) {
+  // tracking : afficher "Noter" et "Dernier · Record" sur les exercices principaux
+  render(owner, onChange, { newDefaults = {}, emptyText = 'Aucun exercice pour l’instant.', tracking = false } = {}) {
+    this.tracking = tracking;
     const warmups = owner.exercises.filter((e) => e.role === 'warmup');
     const mains = owner.exercises.filter((e) => e.role !== 'warmup');
 
@@ -68,6 +70,7 @@ const ExerciseList = {
         chips.length ? el('div', { class: 'chips' }, chips) : null,
         ex.note ? el('div', { class: 'ex-note' }, ex.note) : null,
         this.renderHowTo(ex),
+        this.tracking && ex.role !== 'warmup' ? this.renderPerfRow(ex, owner, onChange) : null,
       ),
       el('div', { class: 'ex-side' },
         el('button', {
@@ -78,6 +81,32 @@ const ExerciseList = {
         el('div', { class: 'drag-handle', 'aria-label': 'Glisser pour déplacer', title: 'Glisser pour déplacer' }, '⠿'),
       ),
     );
+  },
+
+  // Ligne "+ Noter   Dernier : 8 · Record : 10" en bas de la carte
+  renderPerfRow(ex, owner, onChange) {
+    const stats = perfStats(ex.name);
+    const stop = (fn) => (e) => { e.stopPropagation(); fn(); }; // ne pas ouvrir le formulaire
+    return el('div', { class: 'perf-row' },
+      el('button', {
+        type: 'button', class: 'perf-log-btn',
+        onclick: stop(() => LogSheet.open({ name: ex.name, exercise: ex, onDone: onChange })),
+      }, '+ Noter'),
+      el('button', {
+        type: 'button', class: 'perf-stats',
+        'aria-label': `Fiche de ${ex.name}`,
+        onclick: stop(() => this.openSheet(ex, owner, onChange)),
+      },
+        stats
+          ? `Dernier : ${formatPerf(stats.last.value, stats.last.unit)} · Record : ${formatPerf(stats.record.value, stats.record.unit)}`
+          : 'Fiche',
+        el('span', { class: 'chevron', 'aria-hidden': 'true' }, ' ›'),
+      ),
+    );
+  },
+
+  openSheet(ex, owner, onChange) {
+    ProgressSheet.open({ name: ex.name, exercise: ex, owner, onChange });
   },
 
   // Bloc dépliable "Comment faire" (fermé par défaut).
@@ -181,6 +210,7 @@ const ExerciseList = {
   openMenu(ex, owner, onChange) {
     actionSheet(ex.name, [
       { label: 'Modifier', onClick: () => this.edit(ex, owner, onChange) },
+      { label: 'Fiche et progression', onClick: () => this.openSheet(ex, owner, onChange) },
       { label: 'Dupliquer', onClick: () => this.duplicate(ex, owner, onChange) },
       { label: 'Supprimer', danger: true, onClick: () => this.remove(ex, owner, onChange) },
     ]);
