@@ -997,6 +997,113 @@ html.no-scroll, html.no-scroll body { overflow: hidden; }
 .trend-big { font-size: 26px; font-weight: 800; width: 32px; text-align: center; }
 .tabbar-btn { max-width: 110px; }
 
+/* ---------- Mode séance ---------- */
+.launch-btn {
+  width: 100%;
+  min-height: 60px;
+  margin: 0 0 16px;
+  border-radius: 18px;
+  background: var(--accent);
+  color: #06121c;
+  font-size: 19px;
+  font-weight: 800;
+  box-shadow: 0 6px 18px rgba(77, 171, 247, 0.25);
+  transition: transform 0.1s;
+}
+.launch-btn:active { transform: scale(0.98); }
+.launch-btn-small { width: auto; min-height: 44px; margin: 0 14px 12px; padding: 0 16px; font-size: 15px; box-shadow: none; }
+.group-panel .launch-btn { margin-bottom: 12px; }
+
+html.in-session .tabbar { display: none; }
+.session-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  background: var(--bg);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  animation: fade-in 0.2s ease;
+}
+.session-screen {
+  min-height: 100%;
+  max-width: 640px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  padding: calc(var(--safe-top) + 10px) 16px calc(var(--safe-bottom) + 12px);
+}
+.session-top-row { display: flex; align-items: center; justify-content: space-between; min-height: 44px; }
+.session-count { font-size: 16px; font-weight: 700; color: var(--text-dim); }
+.session-close { width: 48px; height: 48px; border-radius: 50%; background: var(--surface); font-size: 18px; color: var(--text-dim); }
+.session-progress { height: 6px; margin-top: 6px; border-radius: 3px; background: var(--surface); overflow: hidden; }
+.session-progress-fill { height: 100%; background: var(--accent); border-radius: 3px; transition: width 0.3s ease; }
+
+.session-body { flex: 1; display: flex; flex-direction: column; align-items: stretch; gap: 10px; padding: 18px 0; }
+.session-cat {
+  align-self: flex-start;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--ex-color) 20%, transparent);
+  color: var(--ex-color);
+  font-size: 14px;
+  font-weight: 800;
+}
+.session-name {
+  margin: 0;
+  padding-left: 14px;
+  border-left: 8px solid var(--ex-color);
+  font-size: clamp(30px, 8.5vw, 44px);
+  line-height: 1.1;
+  overflow-wrap: anywhere;
+}
+.session-setline { font-size: 22px; font-weight: 800; color: var(--text-dim); }
+.session-target { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; font-size: clamp(34px, 10vw, 48px); font-weight: 900; font-variant-numeric: tabular-nums; }
+.session-chip { font-size: 16px; padding: 6px 12px; }
+
+.set-dots { display: flex; flex-wrap: wrap; gap: 10px; margin: 4px 0 6px; }
+.set-dot { width: 26px; height: 26px; border-radius: 50%; box-shadow: inset 0 0 0 3px var(--border); transition: background 0.2s, box-shadow 0.2s; }
+.set-dot.current { box-shadow: inset 0 0 0 3px var(--ex-color); }
+.set-dot.done { background: var(--ex-color); box-shadow: none; }
+
+.session-actions { display: flex; flex-direction: column; gap: 12px; margin-top: 6px; }
+.session-adjust { display: flex; flex-direction: column; gap: 6px; }
+.session-adjust-label { font-size: 14px; font-weight: 700; color: var(--text-dim); }
+.session-adjust .stepper-btn { width: 64px; min-height: 64px; font-size: 32px; }
+.session-adjust .stepper-input { min-height: 64px; font-size: 30px; }
+.session-done-btn {
+  width: 100%;
+  min-height: 76px;
+  border-radius: 20px;
+  background: #34c759;
+  color: #04150a;
+  font-size: 24px;
+  font-weight: 900;
+  transition: transform 0.1s;
+}
+.session-done-btn:active { transform: scale(0.98); }
+.session-secondary-btn {
+  width: 100%;
+  min-height: 64px;
+  border-radius: 18px;
+  background: var(--surface-2);
+  font-size: 20px;
+  font-weight: 800;
+}
+.session-details summary { min-height: 44px; font-size: 15px; }
+
+.session-nav { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.session-nav-btn {
+  min-height: 56px;
+  padding: 0 6px;
+  border-radius: 14px;
+  background: var(--surface);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-dim);
+}
+.session-nav-btn:disabled { opacity: 0.35; }
+.session-nav-btn.danger { color: #ff6b61; }
+
 /* ---------- Rappel de sauvegarde ---------- */
 .reminder {
   display: flex;

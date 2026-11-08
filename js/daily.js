@@ -86,6 +86,10 @@ const DailyView = {
           onclick: () => this.openGroupMenu(routine, group, index),
         }, '⋯'),
       ),
+      group.exercises.length ? el('button', {
+        type: 'button', class: 'launch-btn',
+        onclick: () => SessionPlayer.launchDaily(routine, group),
+      }, `▶ Lancer ${group.name}`) : null,
       ExerciseList.render(group, () => this.saveAndRender(), {
         newDefaults: { category: 'mobility', type: 'hold' },
         emptyText: 'Aucun exercice dans ce groupe.',

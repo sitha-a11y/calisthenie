@@ -129,6 +129,10 @@ const WeekView = {
       body = el('div', {},
         titleInput,
         noteInput('Note du jour (ex. ~70 min)'),
+        dayData.exercises.length ? el('button', {
+          type: 'button', class: 'launch-btn',
+          onclick: () => SessionPlayer.launchDay(this.week, this.day),
+        }, '▶ Lancer la séance') : null,
         ExerciseList.render(dayData, () => this.saveAndRender(), { tracking: true }));
     }
 
@@ -178,6 +182,10 @@ const WeekView = {
               return el('li', {}, el('div', { class: 'daily-row' }, row));
             }))
             : el('p', { class: 'hint daily-empty' }, 'Aucun exercice dans ce groupe.'),
+          group.exercises.length ? el('button', {
+            type: 'button', class: 'launch-btn launch-btn-small',
+            onclick: () => SessionPlayer.launchDaily(routine, group),
+          }, '▶ Lancer les étirements') : null,
         );
       });
     return blocks.length ? el('div', { class: 'daily-blocks' }, blocks) : null;

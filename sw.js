@@ -7,7 +7,7 @@
 //
 // ⚠️ Si tu ajoutes un fichier à l'app, ajoute-le aussi dans la liste FILES ci-dessous.
 
-const CACHE = 'calisthenie-v1';
+const CACHE = 'calisthenie-v2';
 const NETWORK_TIMEOUT_MS = 3000;
 
 const FILES = [
@@ -22,6 +22,7 @@ const FILES = [
   'js/library.js',
   'js/default-program.js',
   'js/progress.js',
+  'js/session.js',
   'js/sortable.js',
   'js/exercise-form.js',
   'js/exercise-list.js',
