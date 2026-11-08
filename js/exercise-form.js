@@ -50,11 +50,59 @@ const ExerciseForm = {
       (v) => { draft.category = v; colorField.refresh(); },
     );
 
+    const typeControl = segmentedControl([
+      { value: 'reps', label: 'Reps' },
+      { value: 'hold', label: 'Hold (maintien)' },
+    ], draft.type, (v) => { draft.type = v; updateTargetLabel(); });
+
+    // Ligne "Bibliothèque : Front Lever · Intermédiaire ★" quand l'exercice y est relié
+    const libInfo = el('div', { class: 'lib-link' });
+    const updateLibInfo = () => {
+      const item = draft.libraryId ? findLibraryItem(draft.libraryId) : null;
+      if (!item) { libInfo.replaceChildren(); return; }
+      const level = item.level ? LEVELS[item.level] : null;
+      libInfo.replaceChildren(
+        el('span', {}, '📚 ', item.name, level ? ` · ${level.label}` : '', item.milestone ? ' ★' : ''),
+        el('button', {
+          type: 'button', class: 'link-btn',
+          onclick: () => { draft.libraryId = null; updateLibInfo(); },
+        }, 'Retirer le lien'),
+      );
+    };
+    updateLibInfo();
+
+    // Choisir dans la bibliothèque : remplit le nom, le type et la catégorie
+    const pickFromLibrary = () => {
+      const closePicker = openSheet('Choisir dans la bibliothèque', LibraryView.build({
+        onPick: (item) => {
+          closePicker();
+          draft.name = item.name;
+          nameInput.value = item.name;
+          nameInput.classList.remove('invalid');
+          draft.libraryId = item.id;
+          if (item.id) {
+            draft.type = item.type;
+            typeControl.setValue(item.type);
+            updateTargetLabel();
+            if (item.category) {
+              draft.category = item.category;
+              categoryField.setValue(item.category);
+              colorField.refresh();
+            }
+          }
+          updateLibInfo();
+        },
+      }));
+    };
+
     const content = el('form', {
       class: 'form',
       onsubmit: (e) => { e.preventDefault(); save(); },
     },
-      field('Nom', nameInput),
+      field('Nom', nameInput,
+        el('button', { type: 'button', class: 'btn btn-secondary pick-btn', onclick: pickFromLibrary },
+          '📚 Choisir dans la bibliothèque'),
+        libInfo),
 
       field('Catégorie', categoryField),
 
@@ -66,10 +114,7 @@ const ExerciseForm = {
         { value: 'main', label: 'Principal' },
       ], draft.role, (v) => { draft.role = v; })),
 
-      field('Type', segmentedControl([
-        { value: 'reps', label: 'Reps' },
-        { value: 'hold', label: 'Hold (maintien)' },
-      ], draft.type, (v) => { draft.type = v; updateTargetLabel(); })),
+      field('Type', typeControl),
 
       field('Sets', numberStepper({
         value: draft.sets, step: 1, label: 'Sets',

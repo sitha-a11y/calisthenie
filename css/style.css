@@ -697,6 +697,120 @@ html.no-scroll, html.no-scroll body { overflow: hidden; }
 .group-when { flex: 1; margin: 0; }
 .group-panel .add-btn { margin-bottom: 0; }
 
+/* ---------- Bibliothèque ---------- */
+.library .search { margin-bottom: 4px; }
+.lib-legend { display: flex; align-items: center; flex-wrap: wrap; gap: 4px; margin: 8px 0 4px; }
+.lib-section { margin-top: 24px; }
+
+.lib-summary {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.lib-summary > div {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 12px 4px;
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+}
+.lib-summary strong { font-size: 26px; font-variant-numeric: tabular-nums; }
+.lib-summary span { font-size: 13px; color: var(--text-dim); }
+
+.family-card {
+  margin-bottom: 10px;
+  border-radius: 18px;
+  background: var(--surface);
+  border-left: 6px solid var(--family-color);
+  overflow: hidden;
+}
+.family-head { width: 100%; padding: 14px 12px 12px 14px; text-align: left; }
+.family-head:active { opacity: 0.8; }
+.family-title-row { display: flex; align-items: center; gap: 10px; min-height: 28px; }
+.family-name { flex: 1; min-width: 0; font-size: 18px; font-weight: 700; }
+.family-count { font-size: 14px; font-weight: 700; color: var(--text-dim); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.family-inprogress { font-weight: 500; color: #ff6b61; }
+.chevron { transition: transform 0.2s; display: inline-block; }
+.chevron.open { transform: rotate(90deg); }
+.progress-bar { height: 6px; margin-top: 10px; border-radius: 3px; background: var(--surface-2); overflow: hidden; }
+.progress-fill { height: 100%; border-radius: 3px; background: #51cf66; transition: width 0.3s ease; }
+
+.family-body { padding: 0 8px 10px; animation: fade-in 0.2s ease; }
+.family-empty { padding: 4px 8px 8px; }
+.lib-item { display: flex; align-items: center; border-top: 1px solid var(--border); }
+.lib-item-main {
+  flex: 1;
+  min-width: 0;
+  min-height: 52px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px;
+  text-align: left;
+}
+.lib-item-main:active { opacity: 0.7; }
+.lib-item-name { flex: 1; min-width: 0; font-size: 16px; overflow-wrap: anywhere; }
+.lib-item.milestone .lib-item-name { font-weight: 800; font-size: 17px; }
+.milestone-star { color: #fcc419; }
+.lib-item.status-done .lib-item-name { color: var(--text-dim); }
+
+.level-pill {
+  flex-shrink: 0;
+  width: 76px;
+  padding: 3px 0;
+  border-radius: 999px;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 800;
+  background: color-mix(in srgb, var(--level-color) 18%, transparent);
+  color: var(--level-color);
+}
+.level-pill.unknown { background: var(--surface-2); color: var(--text-dim); }
+
+/* Statut : rond vide → point rouge (en cours) → coche (validé) */
+.status-dot {
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 2px var(--text-faint);
+  font-size: 15px;
+  font-weight: 900;
+  vertical-align: middle;
+}
+.lib-legend .status-dot { width: 20px; height: 20px; font-size: 12px; }
+.status-dot.in-progress { box-shadow: inset 0 0 0 2px #ff6b61; background: radial-gradient(circle, #ff6b61 0 5px, transparent 6px); }
+.status-dot.done { box-shadow: none; background: var(--text); color: var(--bg); }
+
+.lib-add-btn {
+  width: 100%;
+  min-height: 48px;
+  margin-top: 6px;
+  border-radius: 12px;
+  border: 1.5px dashed var(--border);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-dim);
+}
+.free-name-btn { margin-top: 12px; }
+
+/* Dans le formulaire d'exercice */
+.pick-btn { margin-top: 8px; min-height: 48px; font-size: 16px; font-weight: 600; }
+.lib-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 6px;
+  font-size: 14px;
+  color: var(--text-dim);
+}
+.lib-link:empty { display: none; }
+
 /* ---------- Message temporaire ("toast") ---------- */
 .toast {
   position: fixed;

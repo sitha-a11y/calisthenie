@@ -77,6 +77,10 @@ function segmentedControl(options, current, onChange) {
     }, opt.label);
     wrap.append(btn);
   });
+  // Pour changer le choix depuis le code (sans déclencher onChange)
+  wrap.setValue = (value) => {
+    [...wrap.children].forEach((b, i) => b.classList.toggle('active', options[i].value === value));
+  };
   return wrap;
 }
 
@@ -105,6 +109,13 @@ function choiceChips(options, current, onChange) {
     );
     wrap.append(btn);
   });
+  wrap.setValue = (value) => {
+    [...wrap.children].forEach((b, i) => {
+      const on = options[i].value === value;
+      b.classList.toggle('active', on);
+      b.setAttribute('aria-checked', on ? 'true' : 'false');
+    });
+  };
   return wrap;
 }
 
