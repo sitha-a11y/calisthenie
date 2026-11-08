@@ -172,9 +172,9 @@ function loadData() {
   return createInitialData();
 }
 
-// Données du tout premier lancement (le programme pré-rempli s'ajoute à l'étape 6)
+// Données du tout premier lancement : ton programme pré-rempli (voir default-program.js)
 function createInitialData() {
-  return createDefaultData();
+  return applyDefaultProgram(createDefaultData());
 }
 
 // Enregistre toutes les données

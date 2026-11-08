@@ -7,6 +7,30 @@ const SettingsView = {
       el('h1', { class: 'page-title' }, 'Réglages'),
       this.renderWeekCard(),
       this.renderCategoriesCard(),
+      this.renderProgramCard(),
+    );
+  },
+
+  // Recharger le programme de départ (utile si tu as déjà des données de test)
+  renderProgramCard() {
+    return el('div', { class: 'card' },
+      el('h2', { class: 'card-title' }, 'Programme de départ'),
+      el('p', { class: 'muted' },
+        'Remet ton programme A/B et tes étirements du matin tels qu’au premier lancement (sets/reps vides).'),
+      el('button', {
+        type: 'button',
+        class: 'btn btn-secondary',
+        onclick: async () => {
+          const ok = await confirmSheet('Charger le programme de départ ?',
+            'Les semaines A et B et les routines quotidiennes seront remplacées. Tes couleurs, ta progression et ta bibliothèque perso sont gardées.',
+            'Charger', { danger: true });
+          if (!ok) return;
+          applyDefaultProgram(appData);
+          saveData(appData);
+          WeekView.goToToday();
+          showToast('Programme de départ chargé');
+        },
+      }, 'Charger mon programme de départ'),
     );
   },
 
